@@ -1,9 +1,21 @@
-EDUCATION,Count
-Associate's Degree,2492
-Bachelor's Degree,5888
-High School,4319
-Kindergarten,4
-Master's Degree or Higher,4532
-No schooling completed,342
-Some College,4945
-Some High School,739
+INCOMEGRP,YEAR,value
+$100K+,diff2021,-11.1
+$40-70K,diff2021,-6.4
+$70-100K,diff2021,-4.6
+< $40K,diff2021,-0.8
+$100K+,diff2022,16.8
+$40-70K,diff2022,20.5
+$70-100K,diff2022,17.4
+< $40K,diff2022,11.4
+$100K+,diff2023,-6.1
+$40-70K,diff2023,-3.5
+$70-100K,diff2023,-3.2
+< $40K,diff2023,-1.7
+$100K+,diff2024,2.1
+$40-70K,diff2024,-3.2
+$70-100K,diff2024,4.4
+< $40K,diff2024,-1.2
+$100K+,diff2025,2.5
+$40-70K,diff2025,3.6
+$70-100K,diff2025,-5.5
+< $40K,diff2025,0.6
