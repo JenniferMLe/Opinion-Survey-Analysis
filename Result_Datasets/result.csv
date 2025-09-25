@@ -1,21 +1,16 @@
-INCOMEGRP,YEAR,value
-$100K+,diff2021,-11.1
-$40-70K,diff2021,-6.4
-$70-100K,diff2021,-4.6
-< $40K,diff2021,-0.8
-$100K+,diff2022,16.8
-$40-70K,diff2022,20.5
-$70-100K,diff2022,17.4
-< $40K,diff2022,11.4
-$100K+,diff2023,-6.1
-$40-70K,diff2023,-3.5
-$70-100K,diff2023,-3.2
-< $40K,diff2023,-1.7
-$100K+,diff2024,2.1
-$40-70K,diff2024,-3.2
-$70-100K,diff2024,4.4
-< $40K,diff2024,-1.2
-$100K+,diff2025,2.5
-$40-70K,diff2025,3.6
-$70-100K,diff2025,-5.5
-< $40K,diff2025,0.6
+Group,YEAR,PercentNegDiff
+RELIG: Buddhist,2022,47.7
+RELIG: Orthodox,2022,44.1
+RELIG: Mormon,2022,38.7
+RACE: Asian,2022,35.9
+RELIG: Hindu,2022,32.9
+PRAY: Once a week,2022,28.7
+PARTY: Republican,2022,27.2
+RACE: Mixed Race,2022,24.8
+PRAY: A few times a month,2022,22.7
+INCOMEGRP: $40-70K,2022,21.3
+MARITAL: Living with a partner,2022,20.6
+EDUCATION: High School,2022,20.4
+TWITTER: Yes,2022,20.2
+PRAY: A few times a week,2022,20.2
+PRAY: Once a day,2022,20.1
