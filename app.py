@@ -13,17 +13,27 @@ df2 = pd.DataFrame({
     "sales": [7, 12, 6]
 })
 
+df_name = {
+    'Age':'AGEGRP2',
+    'Race':'RACE',
+    'Gender':'GENDER',
+    'Income':'INCOMEGRP',
+    'Education':'EDUCATION',
+    'Party':'PARTY',
+    'Religion':'RELIG'
+}
+
 # --- Streamlit UI ---
 st.title("Opinion Survey Analysis")
 
 # Dropdown to select dataset
-dataset_choice = st.selectbox("Choose a dataset", ["DF1", "DF2"])
+dataset_choice = st.selectbox("Choose a demographic", ['Age','Race','Gender','Income','Education','Party','Religion'])
 
 # Map selection to actual DataFrame
-df = df1 if dataset_choice == "DF1" else df2
+df = df1
 
 # Dropdown to select year
-year_choice = st.selectbox("Select year", df["year"])
+year_choice = st.selectbox("Select year", df1)
 
 # Filter data for selected year
 df_filtered = df[df["year"] == year_choice]
