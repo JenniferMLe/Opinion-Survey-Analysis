@@ -1,18 +1,12 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import utils
 
-# --- Sample data ---
-df1 = pd.DataFrame({
-    "year": [2020, 2021, 2022],
-    "sales": [10, 15, 8]
-})
+# read cleaned dataset from csv file
+df_combined = pd.read_csv('Datasets/combined_dataset.csv')
 
-df2 = pd.DataFrame({
-    "year": [2020, 2021, 2022],
-    "sales": [7, 12, 6]
-})
-
+# map filter choices to column names
 df_name = {
     'Age':'AGEGRP2',
     'Race':'RACE',
@@ -20,27 +14,168 @@ df_name = {
     'Income':'INCOMEGRP',
     'Education':'EDUCATION',
     'Party':'PARTY',
-    'Religion':'RELIG'
+    'Religion':'RELIG',
+    'Economy Rating':'ECON1MOD',
+    'Economy Outlook in 1 Year':'ECON1BMOD',
+    'Use weighted data':True,
+    'Use raw data':False
 }
 
-# --- Streamlit UI ---
-st.title("Opinion Survey Analysis")
+# define order for categorical columns
+category_orders = {
+    'AGEGRP2':['18-24','25-39','40-59','60-79','80+'],
+    'INCOMEGRP':['< $40K','$40-70K','$70-100K','$100K+'],
+    'ECON1MOD':['Poor','Only fair','Good','Excellent'],
+    'ECON1BMOD':['Better','About the same','Worse'],
+    'PARTY':['Democrat','Republican','Independent','Other'],
+    'EDUCATION':[
+        "No schooling completed",
+        "Some High School",
+        "High School",
+        "Some College",
+        "Associate's Degree",
+        "Bachelor's Degree",
+        "Master's Degree or Higher"
+    ]
+}
 
-# Dropdown to select dataset
-dataset_choice = st.selectbox("Choose a demographic", ['Age','Race','Gender','Income','Education','Party','Religion'])
+# page setup
+st.set_page_config(layout="wide")
+st.markdown(
+    """
+    <style>
+        .block-container {
+            padding-top: 30px;
+            padding-bottom: 10px;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
-# Map selection to actual DataFrame
-df = df1
+# defining dashboard structure
+intro_tab,demographics_tab,problem_tab,details_tab,testing_tab,raw_data_tab = st.tabs([
+    'Intro',
+    'Participant Demographics',
+    'Changes Over Time',
+    'Who is Affected',
+    'Hypothesis Testing',
+    'Raw Data'
+])
 
-# Dropdown to select year
-year_choice = st.selectbox("Select year", df1)
+with intro_tab:
+    st.title("Opinion Survey Analysis")
+    st.text_area('','Enter Description Here.')
 
-# Filter data for selected year
-df_filtered = df[df["year"] == year_choice]
+with demographics_tab:
+    def create_graph(col_name,demographic):
+        # Map selection to actual DataFrame
+        df = utils.get_count(df_combined,[col_name])
 
-# Display filtered data
-st.write("Filtered Data:", df_filtered)
+        fig = px.bar(
+            df, 
+            x=col_name, 
+            y='Count',
+            title='Demographic Breakdown by ' + demographic,
+            text_auto='.2s', # put numbers in K format
+            category_orders=category_orders
+        )
 
-# Plot bar chart
-fig = px.bar(df_filtered, x="year", y="sales", title='Title')
-st.plotly_chart(fig)
+        fig.update_xaxes(title=demographic)
+        return fig
+
+    income_graph, edu_graph = st.columns([1,1])
+
+    with income_graph:
+        fig = create_graph('INCOMEGRP','Income')
+        st.plotly_chart(fig)
+
+    with edu_graph:
+        fig = create_graph('EDUCATION','Education')
+        st.plotly_chart(fig)
+
+    demographic = st.selectbox("Choose another demographic", 
+                                ['Age','Race','Gender','Party','Religion'],key='1')
+    
+    col_name = df_name[demographic]
+    fig = create_graph(col_name,demographic)
+
+    st.plotly_chart(fig)
+
+with problem_tab:
+    color_map = {
+    'Excellent':"#0daa00",
+    'Good':'#8fdc32',
+    'Only fair':'#ffc500',
+    'Poor':'#f6492a',
+    'Better':"#8fdc32",
+    'About the same':'#ffc500',
+    'Worse':'#f6492a'
+    }
+    # this function displays a cluster bar graph dispalying yearly changes in a column in the combined dataframe
+    def examine_changes(column,weighted,title):
+        if weighted:
+            df_change = utils.get_count_weighted(df_combined,['YEAR',column])
+        else:
+            df_change = utils.get_count(df_combined,['YEAR',column])
+        df_change['Percent'] = (df_change['Count'] / df_change.groupby('YEAR')['Count'].transform('sum')).round(4) * 100
+        utils.write_to_file(df_change)
+
+        fig = px.line(
+            df_change,
+            x='YEAR',
+            y='Percent',
+            color=column,
+            title=title,
+            hover_data=['Count'],
+            category_orders=category_orders,
+            color_discrete_map=color_map
+        )
+        fig.update_xaxes(type='category',title_text='')
+        fig.update_traces(line=dict(width=8))
+        fig.update_layout(legend_title_text='')
+        
+        return fig
+
+    # weighted filter
+    weighted = st.selectbox("Choose weighted or raw data", ['Use weighted data','Use raw data'])
+    weighted = df_name[weighted]
+
+    problem1,problem2 = st.columns([1,1])
+    with problem1: st.plotly_chart(examine_changes('ECON1MOD',weighted,'Economy Rating'))
+    with problem2: st.plotly_chart(examine_changes('ECON1BMOD',weighted,'Economy Outlook in 1 Year'))
+
+    st.text_area("","Put description here.")
+
+with details_tab:
+    def graph_percent_increase(col,group_name):
+        df = utils.get_percent_increase(df_combined,col)
+
+        fig = px.bar(
+            df,
+            x='YEAR',
+            y='PercentNegDiff',
+            title='Difference in Negative Economy Ratings Percentages From Previous Year For ' + group_name + ' Groups',
+            barmode='group',
+            color=df.columns[0],
+            hover_data=['YEAR'],
+            category_orders=category_orders,
+            color_discrete_map=color_map
+        )
+        (fig
+            .update_yaxes(title="Difference")
+            .update_xaxes(type='category')
+            .update_layout(legend_title_text=group_name)
+        )
+        return fig
+
+    filter3,filter4 = st.columns([1,1])
+
+    with filter3:
+        demographic2 = st.selectbox("Choose a demographic", 
+                                    ['Age','Race','Gender','Income','Education','Party','Religion'],key='2')
+        
+    col_name = df_name[demographic2]
+        
+    st.plotly_chart(graph_percent_increase(col_name,demographic2))
+    st.text_area('','Enter Description for Detail Tab Here.')
