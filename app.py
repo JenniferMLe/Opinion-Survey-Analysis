@@ -45,27 +45,60 @@ st.markdown(
     """
     <style>
         .block-container {
-            padding-top: 30px;
-            padding-bottom: 10px;
+            padding-top: 2rem;
+            padding-bottom: 1rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        .border {
+            border-style: solid;
+            border-color: #003f7eff;
+            background-color: #C9EFFF;
+            padding: 4px 4px 4px 4px;
+            margin-bottom: 7px;
         }
     </style>
-    """,
-    unsafe_allow_html=True
+    """, unsafe_allow_html=True
 )
-
-# defining dashboard structure
-intro_tab,demographics_tab,problem_tab,details_tab,testing_tab,raw_data_tab = st.tabs([
+# defining tabs
+intro_tab,demographics_tab,problem_tab,details_tab,testing_tab,end_tab = st.tabs([
     'Intro',
     'Participant Demographics',
     'Changes Over Time',
     'Who is Affected',
     'Hypothesis Testing',
-    'Raw Data'
+    'End'
 ])
 
 with intro_tab:
-    st.title("Opinion Survey Analysis")
-    st.text_area('','Enter Description Here.')
+    st.header("Opinion Survey Analysis")    
+    st.markdown('<div class="border"></div>', unsafe_allow_html=True)
+    
+    st.write(
+        '''
+        In this analysis, using data from the National Public Opinion Reference surveys (NPORS) we will
+
+        1. Examine how opinions on the economy has changed from 2020 to 2025 
+        2. Examine which groups are most affected when opinions about the economy decline
+        3. Examine if different things like income and education significantly impact negative or positive sentiment
+
+        Below is the cleaned dataset used to conduct this study. 
+        '''
+    )
+    st.markdown('<div class="border"></div>', unsafe_allow_html=True)
+    # st.markdown("""
+    #     <div class="description">
+    #     In this analysis, using data from the National Public Opinion Reference surveys (NPORS) we will
+
+    #     1. Examine how opinions on the economy has changed from 2020 to 2025 
+    #     2. Examine which groups are most affected when opinions about the economy decline
+    #     3. Examine if different things like income and education significantly impact negative or positive sentiment
+
+    #     Below is the cleaned dataset used to conduct this study. 
+    #     </div>
+    #     """, unsafe_allow_html=True)
+   
+    st.dataframe(df_combined)
 
 with demographics_tab:
     def create_graph(col_name,demographic):
@@ -83,9 +116,9 @@ with demographics_tab:
 
         fig.update_xaxes(title=demographic)
         return fig
-
+    
     income_graph, edu_graph = st.columns([1,1])
-
+    
     with income_graph:
         fig = create_graph('INCOMEGRP','Income')
         st.plotly_chart(fig)
@@ -179,3 +212,7 @@ with details_tab:
         
     st.plotly_chart(graph_percent_increase(col_name,demographic2))
     st.text_area('','Enter Description for Detail Tab Here.')
+
+with end_tab:
+    st.title("Thank You For Viewing!")
+    
