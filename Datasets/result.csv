@@ -1,26 +1,36 @@
-AGEGRP2,YEAR,PercentNegDiff
-18-24,2021,1.7
-25-39,2021,-6.9
-40-59,2021,-6.6
-60-79,2021,-5.9
-80+,2021,-4.7
-18-24,2022,14.8
-25-39,2022,16.7
-40-59,2022,16.3
-60-79,2022,18.7
-80+,2022,15.8
-18-24,2023,3.3
-25-39,2023,-2.8
-40-59,2023,-7.6
-60-79,2023,-7.9
-80+,2023,-0.6
-18-24,2024,-9.5
-25-39,2024,2.5
-40-59,2024,5.2
-60-79,2024,-0.7
-80+,2024,-10.2
-18-24,2025,-1.0
-25-39,2025,1.1
-40-59,2025,-3.0
-60-79,2025,-0.2
-80+,2025,6.2
+RELIG,GENDER,Count
+Agnostic,Female,546
+Agnostic,Male,608
+Agnostic,Other,13
+Atheist,Female,390
+Atheist,Male,587
+Atheist,Other,18
+Buddhist,Female,88
+Buddhist,Male,97
+Buddhist,Other,1
+Hindu,Female,40
+Hindu,Male,103
+Hindu,Other,1
+Jewish,Female,197
+Jewish,Male,218
+Jewish,Other,5
+Mormon,Female,149
+Mormon,Male,142
+Mormon,Other,2
+Muslim,Female,61
+Muslim,Male,90
+Muslim,Other,1
+Nothing in particular,Female,2219
+Nothing in particular,Male,1601
+Nothing in particular,Other,47
+Orthodox,Female,80
+Orthodox,Male,58
+Other,Female,361
+Other,Male,250
+Other,Other,22
+Protestant,Female,6015
+Protestant,Male,3939
+Protestant,Other,21
+Roman Catholic,Female,2783
+Roman Catholic,Male,2171
+Roman Catholic,Other,9

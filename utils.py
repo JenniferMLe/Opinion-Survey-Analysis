@@ -4,13 +4,13 @@ import numpy as np
 
 def write_to_file(df,file_name='Datasets/result.csv'):
     df.to_csv(file_name, index=False)
-
 # print a list of distinct values from a column in a dataframe
 # helps with data cleaning
-def get_distinct_values(df, columns, sort_by):
-    vals = df[columns].sort_values(by=sort_by).drop_duplicates()
+def get_distinct_values(df, columns):
+    vals = df[columns].unique()
+    return vals
     # print to csv file to see all values since output may be cut if too long
-    write_to_file(vals)
+    # write_to_file(vals)
 
 # stop number of columns at the end that don't have the year in the column name
 def remove_year_from_column_name(dataset, stop):

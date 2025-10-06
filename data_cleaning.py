@@ -143,7 +143,8 @@ def replace_values(df_combined):
         r'.*Bachelor.*':'Bachelor\'s Degree',
         r'.*Master.*':'Master\'s Degree or Higher',
         r'.*MD.*':'Master\'s Degree or Higher',
-        r'.*Doctorate.*':'Master\'s Degree or Higher'
+        r'.*Doctorate.*':'Master\'s Degree or Higher',
+        'Kindergarten':'N/A'
     },regex=True)
 
     df_combined["RELIG"] = df_combined["RELIG"].replace({
