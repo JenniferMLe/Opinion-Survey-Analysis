@@ -8,7 +8,8 @@ from scipy.stats import chi2_contingency
 df_combined = pd.read_csv('Datasets/combined_dataset.csv')
 
 # map filter choices to column names
-demographics = ['Age','Race','Gender','Income','Education','Party','Religion','Faith Importance','Pray Frequency']
+demographics = ['Age','Race','Gender','Income','Marital Status',
+                'Education','Party','Religion','Faith Importance','Pray Frequency']
 
 # maps selection label to column names
 col = {
@@ -21,6 +22,7 @@ col = {
     'Religion':'RELIG',
     'Faith Importance':'RELIMP',
     'Pray Frequency':'PRAY',
+    'Marital Status':'MARITAL',
     'Economy Rating':'ECON1MOD',
     'Economy Outlook in 1 Year':'ECON1BMOD'
 }
@@ -33,6 +35,7 @@ category_orders = {
     'ECON1BMOD':['Better','About the same','Worse'],
     'PARTY':['Democrat','Republican','Independent','Other'],
     'RELIMP':['Not at all important','Not too important','Somewhat important','Very important'],
+    'MARITAL':['Never married','Living with a partner','Married','Divorced','Widowed'],
     'EDUCATION':[
         "No schooling completed",
         "Some High School",
@@ -80,23 +83,23 @@ st.markdown(
     """, unsafe_allow_html=True
 )
 # defining tabs
-intro_tab,demographics_tab,problem_tab,details_tab,testing_tab,end_tab = st.tabs([
+intro_tab,demographics_tab,problem_tab,details_tab,testing_tab = st.tabs([
     'Intro',
     "Who We're Studying",
     'Changes Over Time',
     'Who is Affected',
-    'Significant Influence',
-    'Outro'
+    'Significant Influence'
 ])
 
 with intro_tab:
     st.header("Opinion Survey Analysis")    
     st.markdown('<div class="border">'  
-    "In this analysis, using data from the National Public Opinion Reference surveys (NPORS) we will <br><br>"
+    "In this analysis using data from NPORS - National Public Opinion Reference surveys (more info "
+    '<a href="https://www.pewresearch.org/methods/fact-sheet/national-public-opinion-reference-survey-npors/" target="_blank">here</a>), we will <br><br>' 
 
-    "&nbsp;&nbsp;&nbsp;&nbsp;1. Examine how opinions on the economy has changed from 2020 to 2025<br>"
-    "&nbsp;&nbsp;&nbsp;&nbsp;2. Examine which groups are most affected when opinions about the economy are more pessimistic<br>"
-    "&nbsp;&nbsp;&nbsp;&nbsp;3. Examine if different things like income and education significantly impact negative or positive sentiment<br><br>"
+    "&nbsp;&nbsp;&nbsp;&nbsp;1. Examine how opinions on the economy have changed from 2020 to 2025<br>"
+    "&nbsp;&nbsp;&nbsp;&nbsp;2. Examine which groups are most affected when opinions about the economy become more pessimistic<br>"
+    "&nbsp;&nbsp;&nbsp;&nbsp;3. Examine if different things like income and education significantly impact negative sentiment<br><br>"
 
     "Below is the cleaned dataset used to conduct this study."
     '</div>', unsafe_allow_html=True)
@@ -107,8 +110,8 @@ with demographics_tab:
     st.subheader("Demographics of Survey Participants")
 
     filter1,filter2,filter3 = st.columns([1,1,1])
-    with filter1: dg1 = st.selectbox("Demographic 1",demographics,index=3)
-    with filter2: dg2 = st.selectbox("Demographic 2",demographics,index=4)
+    with filter1: dg1 = st.selectbox("Demographic 1",demographics,index=8)
+    with filter2: dg2 = st.selectbox("Demographic 2",demographics,index=5)
     with filter3: weighted = st.selectbox("Using Weighted Data",[True,False],index=1)
     
     basic_graph,correlation_graph = st.columns([1,3])
@@ -121,7 +124,7 @@ with demographics_tab:
             df, 
             x=col[dg1], 
             y='Percent',
-            title= f'Percent of Respondents by {dg1} Category',
+            title= f'{dg1} Categories Share',
             text_auto='.2s', # put numbers in K format
             category_orders=category_orders,
             template='plotly_dark',
@@ -132,30 +135,28 @@ with demographics_tab:
         st.plotly_chart(fig,key='6')
 
     with correlation_graph:
-        df = utils.get_count(df_combined,[col[dg2],col[dg1]],weighted)
-        df['Percent'] = (df['Count'] / df.groupby(col[dg2])['Count'].transform('sum')).round(4) * 100
+        if dg1 != dg2: 
+            df = utils.get_count(df_combined,[col[dg2],col[dg1]],weighted)
+            df['Percent'] = (df['Count'] / df.groupby(col[dg2])['Count'].transform('sum')).round(4) * 100
 
-        if len(df) <= 30:barmode = 'group'
-        else: barmode = 'stack'
+            if len(df) <= 30:barmode = 'group'
+            else: barmode = 'stack'
 
-        fig = px.bar(
-            df, 
-            x=col[dg2], 
-            y='Percent',
-            title= f'Percent of Respondents by {dg1} and {dg2} Categories',
-            text_auto='.2s', # put numbers in K format
-            category_orders=category_orders,
-            template='plotly_dark',
-            color_discrete_sequence=colors,
-            color=col[dg1],
-            barmode=barmode
-        )
-        fig.update_xaxes(title=dg2)
-        st.plotly_chart(fig,key='4')
-    
-    st.markdown('<div class="border">'  
-    "Put Description For Demogrpahic Tab Here."
-    '</div>', unsafe_allow_html=True)
+            fig = px.bar(
+                df, 
+                x=col[dg2], 
+                y='Percent',
+                title= f'{dg1} Categories Share Among {dg2} Categories',
+                text_auto='.2s', # put numbers in K format
+                category_orders=category_orders,
+                template='plotly_dark',
+                color_discrete_sequence=colors,
+                color=col[dg1],
+                barmode=barmode
+            )
+            fig.update_xaxes(title=dg2)
+            fig.update_layout(legend_title_text=dg1)
+            st.plotly_chart(fig,key='4')
 
 with problem_tab:
     st.subheader("Problem: Pessimism in 2022")
@@ -191,15 +192,29 @@ with problem_tab:
         fig.update_layout(legend_title_text='')
         
         return fig
-
-    side,problem1,problem2 = st.columns([0.3,1,1])
-    with side: weighted = st.selectbox("Using Weighted Data", [True,False])
-    with problem1: st.plotly_chart(graph_changes('ECON1MOD',weighted,'Percentage of each Economy Rating by Year'))
-    with problem2: st.plotly_chart(graph_changes('ECON1BMOD',weighted,'Percentage of each Economy Outlook by Year'))
     
-    st.markdown('<div class="border">'  
-        "Negative economy ratings (Poor and Only Fair) went up by around 16% in 2022 using weighted or unweighted data."
+    description,graphs = st.columns([0.25,1])
+
+    with description:
+        st.markdown('<div class="border">'  
+        "From 2021 to 2022 ...<br><br>"
+
+        "The percent of <b>poor</b> and <b>only fair</b> economy ratings \
+            <b>increaesd by 16.6 percentage points</b>, from 48.2% to 64.8%.<br><br>"
+
+        "The percent of <b>worse</b> economy outlooks <b>increased by 16.6 percentage points</b>, \
+            from 21.6% to 38.2%.<br><br>"
+        
+        "The percent of <b>better</b> economy outlooks <b>decreased by 13 percentage points</b>, \
+            from 32.8% to 19.9%."
+
         '</div>', unsafe_allow_html=True)
+
+    with graphs:
+        weighted = st.selectbox("Using Weighted Data", [True,False])
+        problem1,problem2 = st.columns([1,1])
+        with problem1: st.plotly_chart(graph_changes('ECON1MOD',weighted,'Percentage of each Economy Rating by Year'))
+        with problem2: st.plotly_chart(graph_changes('ECON1BMOD',weighted,'Percentage of each Economy Outlook by Year'))
 
 with details_tab:
     st.subheader("Increase in Percentage of Respondants with Negative Sentiment from 2021 to 2022")
@@ -227,7 +242,7 @@ with details_tab:
         )
         (fig
             .update_xaxes(title=group)
-            .update_yaxes(title="Percentage Increase")
+            .update_yaxes(title="Percentage Points Increase")
             .update_layout(legend_title_text=group)
         )
         return fig
@@ -251,17 +266,13 @@ with details_tab:
             'Metric: Both<br><sub>Increase in "worse" or "about the same" outlook with "poor" or "only fair" ratings')
         st.plotly_chart(fig)
     
-    st.markdown('<div class="border">'  
-    "Put Description For Details Tab Here."
-    '</div>', unsafe_allow_html=True)
-    
 with testing_tab:
     st.subheader('Do Certain Demographics Significantly Impact Negative Sentiment in 2022')
 
     filters,hypothesis = st.columns([1,4])
     with filters:
         group = st.selectbox("Test Group",demographics)
-        metric = st.selectbox("Metric",['Economy Rating','Economy Outlook in 1 Year','Both'])
+        metric = st.selectbox("Metric for Negative Sentiment",['Economy Rating','Economy Outlook in 1 Year','Both'])
         weighted = st.selectbox("Using Weighted Data",[True,False],key=9)
     
     df = df_combined[(df_combined['YEAR']== 2022)]
@@ -282,9 +293,9 @@ with testing_tab:
     df[col[group]] = df_neg[col[group]]
     df['CountNeg'] = df_neg['Count']
     df['CountPos'] = df_pos['Count']
-    df['PercentNeg'] = round((df['CountNeg'] / (df['CountNeg'].sum())*100),2)
+    df['Share of Negative Sentiment (%)'] = round((df['CountNeg'] / (df['CountNeg'].sum())*100),2)
     total = df['CountNeg'].sum() + df['CountPos'].sum()
-    df['PercentTot'] = round(((df['CountNeg'] + df['CountPos']) / total) * 100, 2)
+    df['Share of Total Responses (%)'] = round(((df['CountNeg'] + df['CountPos']) / total) * 100, 2)
 
     chi2, p, dof, expected = chi2_contingency(df[['CountNeg','CountPos']])
     if p < 0.05: s = ''
@@ -292,24 +303,30 @@ with testing_tab:
 
     with hypothesis:
         st.markdown('<div class="border">'  
-        "<b>Null Hypothesis</b>:<br>"
-        f"{group} does not significantly impact negative sentiment. \
-        In other words {group} and negative sentiment are independent.<br><br>"
+        
+        "If there's no significant impact, each category's share of negative \
+        sentiment should be about the same as its share of total responses. <br><br>"
 
-        "<b>Alternative Hypothesis</b>:<br>" 
-        f"{group} significantly impacts negative sentiment. \
-        In other words {group} and negative sentiment are dependent.<br><br>"
+        "For example, if 25% of responses to 'Economy Rating' have an income of <$40K, \
+        25% of negative economy ratings should be from income = <$40K if income does \
+        not impact negative sentiment. The table below compares the two shares. \
+        We'll test for significance using a <b>chi-squared test</b>.<br><br>"
+                    
+        f"<b>Null Hypothesis</b>: {group} does not significantly impact negative sentiment \
+        i.e {group} and negative sentiment are independent.<br>"
 
-        "If the p-value is less than <b>0.05</b> we will reject the null hypothesis.<br><br>"
+        f"<b>Alternative Hypothesis</b>: {group} significantly impacts negative sentiment \
+        i.e {group} and negative sentiment are dependent.<br><br>"
 
-        f"<b>p-value</b>: {round(p,2)} → <b>{s} reject</b> the null hypothesis (negative sentiment is independent of {group})<br><br>"
+        "<b>if p-value < 0.05 → reject the null hypothesis</b> \
+            → the alternative hypothesis is more likely<br>"
 
-        "<b>What does this mean?</b> "
-        f"We {s} have enough evidence to claim that negative sentiment is dependent on {group}."
+       "<b>if p-value ≥ 0.05 → don't reject the null hypothesis</b> \
+            → the null hypothesis is more likely<br><br>"
+
+        f"<b>p-value = {round(p,2)} → {s} reject the null hypothesis"
+        
         '</div>', unsafe_allow_html=True)
         
-    st.dataframe(df[[col[group],'PercentNeg','PercentTot']])
-
-with end_tab:
-    st.title("Thank You For Viewing!")
+    st.dataframe(df[[col[group],'Share of Negative Sentiment (%)','Share of Total Responses (%)']])
     
