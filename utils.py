@@ -1,5 +1,4 @@
 import pandas as pd
-# import plotly.express as px
 import numpy as np
 
 def write_to_file(df,file_name='Datasets/result.csv'):

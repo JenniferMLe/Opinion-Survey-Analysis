@@ -5,17 +5,18 @@ The data used for this project is from the National Public Opinion Reference sur
 <a href="https://www.pewresearch.org/methods/fact-sheet/national-public-opinion-reference-survey-npors/" target="_blank">More info on NPORS</a>.  
 
 Some questions answered by this analysis:
-- What is the correlation between income and religiousness?
-- How did America's opinion on the economy change from 2020 to 2024?
-- Which groups make up the survey participants who believed the economy was poor?
+- How have opinions about the economy changed?
+- Which groups are most affected when opinions about the economy become more pessimistic?
+- Does age significantly impact negative sentiment about the economy?
 
 ### Tech Stack
 - Python
 - Pandas
-- SQL
 - Plotly
+- Streamlit
 
-### View Notebook with Graphs
-<a href="https://jennifermle.github.io/Opinion-Survey-Analysis/" target="_blank">
-    Notebook
+### View App
+<a href="https://opinion-survey-analysis.streamlit.app/" target="_blank">
+https://opinion-survey-analysis.streamlit.app/
 </a>   
+
