@@ -8,8 +8,8 @@ from scipy.stats import chi2_contingency
 df_combined = pd.read_csv('Datasets/combined_dataset.csv')
 
 # map filter choices to column names
-demographics = ['Age','Race','Gender','Income','Marital Status',
-                'Education','Party','Religion','Faith Importance','Pray Frequency']
+demographics = ['Age','Race','Gender','Income','Education','Region','Party',
+                'Marital Status','Religion','Faith Importance','Pray Frequency']
 
 # maps selection label to column names
 col = {
@@ -17,6 +17,7 @@ col = {
     'Race':'RACE',
     'Gender':'GENDER',
     'Income':'INCOMEGRP',
+    'Region':'REGION',
     'Education':'EDUCATION',
     'Party':'PARTY',
     'Religion':'RELIG',
@@ -110,22 +111,27 @@ with demographics_tab:
     st.subheader("Demographics of Survey Participants")
 
     filter1,filter2,filter3 = st.columns([1,1,1])
-    with filter1: dg1 = st.selectbox("Demographic 1",demographics,index=8)
-    with filter2: dg2 = st.selectbox("Demographic 2",demographics,index=5)
+    with filter1: dg1 = st.selectbox("Demographic 1",demographics,index=9)
+    with filter2: dg2 = st.selectbox("Demographic 2",demographics,index=4)
     with filter3: weighted = st.selectbox("Using Weighted Data",[True,False],index=1)
     
     basic_graph,correlation_graph = st.columns([1,3])
 
     with basic_graph:
         df = utils.get_count(df_combined,[col[dg1]],weighted)
-        df['Percent'] = (df['Count'] / df['Count'].sum()).round(4) * 100
+        df['Percent'] = (df['count'] / df['count'].sum()).round(2) * 100
 
         fig = px.bar(
             df, 
             x=col[dg1], 
             y='Percent',
             title= f'{dg1} Categories Share',
-            text_auto='.2s', # put numbers in K format
+            text = df['Percent'].astype(int).astype(str) + '%',
+            hover_data={
+                'count':True,
+                'Percent':False,
+                col[dg1]:False
+            },
             category_orders=category_orders,
             template='plotly_dark',
             color_discrete_sequence=colors,
@@ -137,7 +143,7 @@ with demographics_tab:
     with correlation_graph:
         if dg1 != dg2: 
             df = utils.get_count(df_combined,[col[dg2],col[dg1]],weighted)
-            df['Percent'] = (df['Count'] / df.groupby(col[dg2])['Count'].transform('sum')).round(4) * 100
+            df['Percent'] = (df['count'] / df.groupby(col[dg2])['count'].transform('sum')).round(2) * 100
 
             if len(df) <= 30:barmode = 'group'
             else: barmode = 'stack'
@@ -147,7 +153,13 @@ with demographics_tab:
                 x=col[dg2], 
                 y='Percent',
                 title= f'{dg1} Categories Share Among {dg2} Categories',
-                text_auto='.2s', # put numbers in K format
+                text = df['Percent'].astype(int).astype(str) + '%',
+                hover_data={
+                    'count':True,
+                    'Percent':False,
+                    col[dg1]:False,
+                    col[dg2]:False
+                },
                 category_orders=category_orders,
                 template='plotly_dark',
                 color_discrete_sequence=colors,
@@ -157,6 +169,35 @@ with demographics_tab:
             fig.update_xaxes(title=dg2)
             fig.update_layout(legend_title_text=dg1)
             st.plotly_chart(fig,key='4')
+    
+    st.subheader('Summary Table')
+    table,description = st.columns([2,1])
+    
+    with table:
+        summary_table = pd.DataFrame()
+        for dg in demographics[::-1]:
+            df = utils.get_count(df_combined,[col[dg]],False)
+            df['percent'] = df['percent'] = (df['count'] / df['count'].sum()).round(2) * 100
+            df = df.rename(columns={col[dg]:'group'})
+            df.insert(0, 'demographic', dg)
+
+            df_weighted = utils.get_count(df_combined,[col[dg]],True)
+            df_weighted['percent'] = df_weighted['percent'] = (df_weighted['count'] / df_weighted['count'].sum()).round(2) * 100
+
+            df['weighted_count'] = df_weighted['count']
+            df['weighted_percentage'] = df_weighted['percent']
+            summary_table = pd.concat([df,summary_table])
+        
+        st.dataframe(summary_table)
+    
+    with description:
+        st.markdown('<div class="border">'  
+        "<b>Age</b>: 70% between the ages of 40 and 79<br><br>"
+        "<b>Race</b>: 76% white<br><br>"
+        "<b>Income</b>: 63% make under $40,000 or above $100,000<br><br>"
+        "<b>Education</b>: 55% have a college degree<br><br>"
+        "<b>Religion</b>: 65% are Christians (Catholic or Protestant)<br>"
+        '</div>', unsafe_allow_html=True)
 
 with problem_tab:
     st.subheader("Problem: Pessimism in 2022")
@@ -174,7 +215,7 @@ with problem_tab:
     # this function displays a cluster bar graph dispalying yearly changes in a column in the combined dataframe
     def graph_changes(column,weighted,title):
         df_change = utils.get_count(df_combined,['YEAR',column],weighted)
-        df_change['Percent'] = (df_change['Count'] / df_change.groupby('YEAR')['Count'].transform('sum')).round(4) * 100
+        df_change['Percent'] = (df_change['count'] / df_change.groupby('YEAR')['count'].transform('sum')).round(4) * 100
         utils.write_to_file(df_change)
 
         fig = px.line(
@@ -183,7 +224,7 @@ with problem_tab:
             y='Percent',
             color=column,
             title=title,
-            hover_data=['Count'],
+            hover_data=['count'],
             category_orders=category_orders,
             color_discrete_map=color_map
         )
@@ -291,8 +332,8 @@ with testing_tab:
 
     df = pd.DataFrame()
     df[col[group]] = df_neg[col[group]]
-    df['CountNeg'] = df_neg['Count']
-    df['CountPos'] = df_pos['Count']
+    df['CountNeg'] = df_neg['count']
+    df['CountPos'] = df_pos['count']
     df['Share of Negative Sentiment (%)'] = round((df['CountNeg'] / (df['CountNeg'].sum())*100),2)
     total = df['CountNeg'].sum() + df['CountPos'].sum()
     df['Share of Total Responses (%)'] = round(((df['CountNeg'] + df['CountPos']) / total) * 100, 2)

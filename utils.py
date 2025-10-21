@@ -30,7 +30,7 @@ def get_count(df,cols,weighted):
         column = 'RESPID'
         df = df.groupby(cols, as_index=False)[column].count()
     
-    df = df.rename(columns={column:'Count'})
+    df = df.rename(columns={column:'count'})
 
     for col in cols:
         df = df[df[col] != 'N/A']
@@ -63,10 +63,10 @@ def get_percent_increase(df,group,problem,weighted):
     df['SENTIMENT'] = np.select(conditions, sentiment, default='N/A')
 
     # get the count for each unique year + group + sentiment
-    df = df.groupby(['YEAR',group,'SENTIMENT'],as_index=False)['Count'].sum()
+    df = df.groupby(['YEAR',group,'SENTIMENT'],as_index=False)['count'].sum()
 
     # convert to wide format so negative rating counts and positive rating counts are a separate columns
-    df = pd.pivot_table(df,index=['YEAR',group],columns=['SENTIMENT'],values='Count').reset_index()
+    df = pd.pivot_table(df,index=['YEAR',group],columns=['SENTIMENT'],values='count').reset_index()
 
     # add a column for the percent of negative ratings 
     df['PercentNegative'] = round((df['Negative'] / (df['Negative']+df['Positive']))*100,1)

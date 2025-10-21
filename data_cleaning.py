@@ -28,12 +28,20 @@ def import_and_combine_datatsets():
     # so there aren't duplicate columns when appending datasets
     df_20 = df_20.rename(columns={
         'SEXASK':'GENDER', 
-        'EDUC_ACS':'EDUCATION'
+        'EDUC_ACS':'EDUCATION',
+        'REGION_NAME':'REGION'
+    })
+    df_21 = df_21.rename(columns={
+
+    })
+    df_22 = df_22.rename(columns={
+        'CREGION':'REGION'
     })
 
     df_23 = df_23.rename(columns={
         'BASEWT':'BASEWEIGHT', 
-        'INC_SDT1':'INCOME'
+        'INC_SDT1':'INCOME',
+        'CREGION':'REGION'
     })
 
     df_24 = df_24.rename(columns={
@@ -41,12 +49,14 @@ def import_and_combine_datatsets():
         'INC_SDT1': 'INCOME',
         'SMUSEa' : 'SMUSE_a','SMUSEd' : 'SMUSE_d','SMUSEg' : 'SMUSE_g','SMUSEj' : 'SMUSE_j',
         'SMUSEb' : 'SMUSE_b','SMUSEe' : 'SMUSE_e','SMUSEh' : 'SMUSE_h','SMUSEk' : 'SMUSE_k',
-        'SMUSEc' : 'SMUSE_c','SMUSEa' : 'SMUSE_f','SMUSEi' : 'SMUSE_i'
+        'SMUSEc' : 'SMUSE_c','SMUSEa' : 'SMUSE_f','SMUSEi' : 'SMUSE_i',
+        'CREGION':'REGION'
     })
 
     df_25 = df_25.rename(columns={
         'BASEWT':'BASEWEIGHT', 
-        'INC_SDT1': 'INCOME'
+        'INC_SDT1': 'INCOME',
+        'CREGION':'REGION'
     })
 
     # add year columns to all datasets
@@ -66,7 +76,7 @@ def remove_and_rename_columns(df_combined):
     # Keep relevent columns only
     df_combined = df_combined[[
         'RESPID','YEAR','AGE','AGEGRP','GENDER','RACECMB', # basic demographics
-        'INCOME','EDUCATION', 'RELIG', 'PARTY', # other useful demographics 
+        'INCOME','EDUCATION', 'REGION','RELIG', 'PARTY', # other useful demographics 
         'RELIMP', 'PRAY', 'MARITAL', # other features
         'SMUSE_a', 'SMUSE_b', 'SMUSE_c', 'SMUSE_d', 'SMUSE_e', 'SMUSE_f', # social media use
         'SMUSE_g','SMUSE_h','SMUSE_i','SMUSE_j','SMUSE_k',
