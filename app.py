@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import utils
+import utils 
 from scipy.stats import chi2_contingency
 
 # read cleaned dataset from csv file
@@ -19,6 +19,7 @@ col = {
     'Income':'INCOMEGRP',
     'Region':'REGION',
     'Education':'EDUCATION',
+    'Social Media':'social_media',
     'Party':'PARTY',
     'Religion':'RELIG',
     'Faith Importance':'RELIMP',
@@ -88,7 +89,7 @@ intro_tab,demographics_tab,problem_tab,details_tab,testing_tab = st.tabs([
     'Intro',
     "Who We're Studying",
     'Changes Over Time',
-    'Who is Affected',
+    'Driving Force',
     'Significant Influence'
 ])
 
@@ -119,17 +120,18 @@ with demographics_tab:
 
     with basic_graph:
         df = utils.get_count(df_combined,[col[dg1]],weighted)
-        df['Percent'] = (df['count'] / df['count'].sum()).round(2) * 100
+        df['percent'] = (df['count'] / df['count'].sum()).round(2) * 100
+        df = df[df[col[dg1]] != 'Refused']
 
         fig = px.bar(
             df, 
             x=col[dg1], 
-            y='Percent',
+            y='percent',
             title= f'{dg1} Categories Share',
-            text = df['Percent'].astype(int).astype(str) + '%',
+            text = df['percent'].astype(int).astype(str) + '%',
             hover_data={
                 'count':True,
-                'Percent':False,
+                'percent':False,
                 col[dg1]:False
             },
             category_orders=category_orders,
@@ -143,7 +145,9 @@ with demographics_tab:
     with correlation_graph:
         if dg1 != dg2: 
             df = utils.get_count(df_combined,[col[dg2],col[dg1]],weighted)
-            df['Percent'] = (df['count'] / df.groupby(col[dg2])['count'].transform('sum')).round(2) * 100
+            df['percent'] = (df['count'] / df.groupby(col[dg2])['count'].transform('sum')).round(2) * 100
+            df = df[df[col[dg1]] != 'Refused']
+            df = df[df[col[dg2]] != 'Refused']
 
             if len(df) <= 30:barmode = 'group'
             else: barmode = 'stack'
@@ -151,12 +155,12 @@ with demographics_tab:
             fig = px.bar(
                 df, 
                 x=col[dg2], 
-                y='Percent',
+                y='percent',
                 title= f'{dg1} Categories Share Among {dg2} Categories',
-                text = df['Percent'].astype(int).astype(str) + '%',
+                text = df['percent'].astype(int).astype(str) + '%',
                 hover_data={
                     'count':True,
-                    'Percent':False,
+                    'percent':False,
                     col[dg1]:False,
                     col[dg2]:False
                 },
@@ -169,10 +173,45 @@ with demographics_tab:
             fig.update_xaxes(title=dg2)
             fig.update_layout(legend_title_text=dg1)
             st.plotly_chart(fig,key='4')
+
+    social_media_graph = st.container()
+
+    with social_media_graph:
+        sm = ['FACEBOOK','YOUTUBE','TWITTER','INSTAGRAM','SNAPCHAT','WHATSAPP',
+                'LINKEDIN','PINTEREST','TIKTOK','BEREAL','REDDIT']
+
+        social_media_df = pd.DataFrame()
+        for s in sm:
+            df = utils.get_count(df_combined,s,weighted)
+            df.insert(0, 'social_media', s)
+            df['percent'] = round((df['count'] / df['count'].sum()) * 100,0).astype(int)
+            df = df.rename(columns={s:'Usage'})
+            social_media_df = pd.concat([df,social_media_df])
+
+        social_media_df = social_media_df[social_media_df['Usage'] == 'Use']
+        
+        fig = px.bar(
+            social_media_df, 
+            x='social_media', 
+            y='percent',
+            title= 'Percent of Respondents Who Use Social Media (Among Those Surveyed)',
+            text = social_media_df['percent'].astype(int).astype(str) + '%',
+            hover_data={
+                'social_media':False,
+                'count':True,
+                'percent':False,
+            },
+            template='plotly_dark',
+            color_discrete_sequence=colors,
+            color='social_media'
+        )
+        fig.update_xaxes(title='')
+        fig.update_layout(showlegend=False)
+        st.plotly_chart(fig,key='99')
     
     st.subheader('Summary Table')
     table,description = st.columns([2,1])
-    
+
     with table:
         summary_table = pd.DataFrame()
         for dg in demographics[::-1]:
@@ -192,9 +231,9 @@ with demographics_tab:
     
     with description:
         st.markdown('<div class="border">'  
-        "<b>Age</b>: 70% between the ages of 40 and 79<br><br>"
-        "<b>Race</b>: 76% white<br><br>"
-        "<b>Income</b>: 63% make under $40,000 or above $100,000<br><br>"
+        "<b>Age</b>: 68% between the ages of 40 and 79<br><br>"
+        "<b>Race</b>: 74% white<br><br>"
+        "<b>Income</b>: 58% make under $40,000 or above $100,000<br><br>"
         "<b>Education</b>: 55% have a college degree<br><br>"
         "<b>Religion</b>: 65% are Christians (Catholic or Protestant)<br>"
         '</div>', unsafe_allow_html=True)
@@ -215,16 +254,21 @@ with problem_tab:
     # this function displays a cluster bar graph dispalying yearly changes in a column in the combined dataframe
     def graph_changes(column,weighted,title):
         df_change = utils.get_count(df_combined,['YEAR',column],weighted)
-        df_change['Percent'] = (df_change['count'] / df_change.groupby('YEAR')['count'].transform('sum')).round(4) * 100
+        df_change['percent'] = (df_change['count'] / df_change.groupby('YEAR')['count'].transform('sum')).round(4) * 100
+        df_change = df_change[df_change[column] != 'Refused']
         utils.write_to_file(df_change)
 
         fig = px.line(
             df_change,
             x='YEAR',
-            y='Percent',
+            y='percent',
             color=column,
             title=title,
-            hover_data=['count'],
+            hover_data={
+                column:False,
+                'count':True,
+                'percent':True
+            },
             category_orders=category_orders,
             color_discrete_map=color_map
         )
@@ -261,23 +305,29 @@ with details_tab:
     st.subheader("Increase in Percentage of Respondants with Negative Sentiment from 2021 to 2022")
 
     filter1,filter2 = st.columns([1,1])
-    with filter1: demographic = st.selectbox("Demographic", demographics, index=3)
+    with filter1: demographic = st.selectbox("Demographic", demographics+['Social Media'], index=3)
     with filter2: weighted = st.selectbox("Using Weighted Data", [True,False],key=10)
 
     def graph_percent_increase(group,metric,weighted,title):
-        if metric != 'Both':
-            use = col[metric]
-        else:
-            use = 'Both'
+        if metric != 'Both':use = col[metric]
+        else:use = 'Both'
         df = utils.get_percent_increase(df_combined,col[group],use,weighted)
+        df = df[df[col[group]]!='Refused']
 
         fig = px.bar(
             df,
             x=col[group],
-            y='PercentNegDiff',
+            y='PercentDiff',
             title=title,
             color=df.columns[0],
-            text_auto='.2s', # put numbers in K format
+            hover_data={
+                '2021_Percent':True,
+                '2022_Percent':True,
+                '2021_Count':True,
+                '2022_Count':True,
+                col[group]:False
+            },
+            text_auto='.0f',
             category_orders=category_orders,
             color_discrete_sequence=colors
         )
@@ -292,20 +342,36 @@ with details_tab:
         
     with graph1:
         fig = graph_percent_increase(demographic,'Economy Rating',weighted,
-            'Metric: Economy Rating<br><sub>Increase in "poor" or "only fair" ratings</sub>')
+            'Metric 1: Economy Rating<br><sub>Increase in "poor" or "only fair" ratings</sub>')
         fig.update_layout(showlegend=False)
         st.plotly_chart(fig)
 
     with graph2:
         fig = graph_percent_increase(demographic,'Economy Outlook in 1 Year',weighted,
-            'Metric: Economy Outlook<br><sub>Increase in "worse" outlooks</sub>')
+            'Metric 2: Economy Outlook<br><sub>Increase in "worse" outlooks</sub>')
         fig.update_layout(showlegend=False)
         st.plotly_chart(fig)
     
     with graph3:
         fig = graph_percent_increase(demographic,'Both',weighted,
-            'Metric: Both<br><sub>Increase in "worse" or "about the same" outlook with "poor" or "only fair" ratings')
+            'Metric 3: Economy Rating and Outlook<br><sub>Increase in "worse" or "about the same" outlook with "poor" or "only fair" ratings')
         st.plotly_chart(fig)
+
+    st.markdown('<div class="border">'  
+    "- The <b>highest income group (>$70K)</b> have the greatest increase " \
+    "in negative sentiment by metric 3.<br>"
+
+    "- Individuals with a <b>Bachelor's Degree or higher</b> have the greatest increase in " \
+    "negative sentiment by metric 2 and 3.<br>"
+
+    "- <b>Religious individuals (faith importance = very important)</b> have the greatest increase " \
+    "in negative economy ratings but the lowest increase in negative economy outlook.<br>" 
+    
+    "- <b>LinkedIn users</b> have the highest increase in negative sentiment by all 3 metrics.<br>"
+
+    "- <b>Republicans</b> have the highest increase in negative economy ratings " \
+    "but the lowest increase in economy outlook."
+    '</div>', unsafe_allow_html=True)
     
 with testing_tab:
     st.subheader('Do Certain Demographics Significantly Impact Negative Sentiment in 2022')

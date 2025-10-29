@@ -2,6 +2,15 @@ import utils
 import pandas as pd
 import numpy as np
 
+# stop number of columns at the end that don't have the year in the column name
+def remove_year_from_column_name(dataset, stop):
+    list_columns = list(dataset.columns)
+
+    for i in range(0,len(list_columns)-stop):
+        list_columns[i] = list_columns[i][:-5]
+
+    dataset.columns = list_columns
+
 def import_and_combine_datatsets():
     # Save each .sav as a data frame
     df_20 = pd.read_spss("Datasets/NPORS-2020/dataset.sav")
@@ -21,8 +30,8 @@ def import_and_combine_datatsets():
     print('imnport success')
 
     # Remove the year from column name to keep naming consistant
-    utils.remove_year_from_column_name(df_20, 5)
-    utils.remove_year_from_column_name(df_21, 2)
+    remove_year_from_column_name(df_20, 5)
+    remove_year_from_column_name(df_21, 2)
 
     # ensure columns recording the same data have the same name
     # so there aren't duplicate columns when appending datasets
@@ -49,7 +58,7 @@ def import_and_combine_datatsets():
         'INC_SDT1': 'INCOME',
         'SMUSEa' : 'SMUSE_a','SMUSEd' : 'SMUSE_d','SMUSEg' : 'SMUSE_g','SMUSEj' : 'SMUSE_j',
         'SMUSEb' : 'SMUSE_b','SMUSEe' : 'SMUSE_e','SMUSEh' : 'SMUSE_h','SMUSEk' : 'SMUSE_k',
-        'SMUSEc' : 'SMUSE_c','SMUSEa' : 'SMUSE_f','SMUSEi' : 'SMUSE_i',
+        'SMUSEc' : 'SMUSE_c','SMUSEf' : 'SMUSE_f','SMUSEi' : 'SMUSE_i',
         'CREGION':'REGION'
     })
 
@@ -66,10 +75,26 @@ def import_and_combine_datatsets():
     df_23['YEAR'] = 2023
     df_24['YEAR'] = 2024
     df_25['YEAR'] = 2025
+    print(df_25.shape)
+
+    social_medias = ['SMUSE_a','SMUSE_b','SMUSE_c','SMUSE_d','SMUSE_e',
+          'SMUSE_f','SMUSE_g','SMUSE_h','SMUSE_i','SMUSE_j','SMUSE_k']
+    
+    dataframes = [df_20,df_21,df_22,df_23,df_24,df_25]
+
+    # for each dataset and for each social media, we want to replace null 
+    # values with "Refused" if the social media was asked
+    for i in range(len(dataframes)) :
+        for social_media in social_medias:
+            df = dataframes[i]
+            # check if social media column exists
+            if social_media in df.columns:
+                df[social_media] = df[social_media].astype(str)
+                df[social_media] = df[social_media].replace({"nan":"Refused"})
 
     # Combine (append) all datasets together
     df_combined = pd.concat([df_20, df_21, df_22, df_23, df_24, df_25])
-    print('Combining datasets successful')
+
     return df_combined
 
 def remove_and_rename_columns(df_combined):
@@ -105,7 +130,7 @@ def replace_values(df_combined):
     # change n/a to -1 so we can convert age to float
     df_combined["AGE"] = df_combined["AGE"].replace({
         "n/a":"-1",
-        "98+":"98",
+        "98+":"-1",
         "":"-1",
         'Refused':"-1"
     })
@@ -114,11 +139,11 @@ def replace_values(df_combined):
     df_combined["AGE"] = df_combined["AGE"].astype(float)
 
     df_combined = df_combined.replace({
-        r'.*Refused.*':'N/A', 
+        r'.*Refused.*':'Refused', 
         r'.*Something else.*':'Other',
-        'No, don\'t use this':'No use',
-        # 'No, dont use this':'No use',
-        "Yes, use this":'Yes use',
+        'Yes, use this':'Use',
+        'No, don’t use this':'Don\'t Use',
+        'No, don\'t use this':'Don\'t Use'
     },regex=True)
 
     df_combined['GENDER'] = df_combined['GENDER'].replace({
@@ -168,8 +193,8 @@ def replace_values(df_combined):
         "Never been married":"Never married",
     })
 
-    categorical_cols = df_combined.select_dtypes(include="category").columns
-    df_combined[categorical_cols] = df_combined[categorical_cols].astype(str)
+    # categorical_cols = df_combined.select_dtypes(include="category").columns
+    # df_combined[categorical_cols] = df_combined[categorical_cols].astype(str)
     return df_combined
 
 def create_calculated_columns(df_combined):
@@ -178,32 +203,33 @@ def create_calculated_columns(df_combined):
         df_combined['INCOME'].isin(['$10K-$20K','$20K-$30K','$30K-$40K','< $10K','< $30K']),
         df_combined['INCOME'].isin(['$40K-$50K','$50K-$60K','$60K-$70K','$50K-$70K']),
         df_combined['INCOME'].isin(['$70K-$100K','$70K-$80K','$70K-$90K','$75K-$100K','$80K-$90K','$90K-$100K']),
-        df_combined['INCOME'].isin(['$100K+','$100K-$125K','$100K-$150K','$125K-$150K','$150K+'])
+        df_combined['INCOME'].isin(['$100K+','$100K-$125K','$100K-$150K','$125K-$150K','$150K+']),
+        df_combined['INCOME'] == 'Refused'
     ]
     # corresponding groups for each condition
-    group = ['< $40K','$40-70K','$70-100K','$100K+']
+    group = ['< $40K','$40-70K','$70-100K','$100K+','Refused']
 
     # insert new column after INCOME
     df_combined.insert(
         df_combined.columns.get_loc('INCOME') + 1, # position we want to insert at
         'INCOMEGRP', # name of new column
-        np.select(conditions, group, default='N/A') # set value according to conditions 
+        np.select(conditions, group, default='Refused') # set value according to conditions 
     )
 
-    '''create calculated columns to group incomes'''
     conditions = [
         (df_combined['AGEGRP'] == '18-24') | ((18 <= df_combined['AGE']) & (df_combined['AGE'] <= 24)),
         (df_combined['AGEGRP'].isin(['25-29','30-34','35-39'])) | ((25 <= df_combined['AGE']) & (df_combined['AGE'] <= 39)),
         (df_combined['AGEGRP'].isin(['40-44','45-49','50-54','55-59'])) | ((40 <= df_combined['AGE']) & (df_combined['AGE'] <= 59)),
         (df_combined['AGEGRP'].isin(['60-64','65-69','70-74','75-79'])) | ((60 <= df_combined['AGE']) & (df_combined['AGE'] <= 79)),
-        (df_combined['AGEGRP'] == '80+')| (80 <= df_combined['AGE'])
+        (df_combined['AGEGRP'] == '80+')| (80 <= df_combined['AGE']),
+        (df_combined['AGEGRP'] == 'Refused') | (df_combined['AGE'] == -1)
     ]
-    group = ['18-24','25-39','40-59','60-79','80+']
+    group = ['18-24','25-39','40-59','60-79','80+','Refused']
 
     df_combined.insert(
         df_combined.columns.get_loc('AGEGRP') + 1, # position we want to insert at
         'AGEGRP2', # name of new column
-        np.select(conditions, group, default='N/A') # set value according to conditions 
+        np.select(conditions, group, default='Refused') # set value according to conditions 
     )
     return df_combined
 
@@ -212,6 +238,9 @@ df_combined = remove_and_rename_columns(df_combined)
 df_combined = replace_values(df_combined)
 df_combined = create_calculated_columns(df_combined)
 
+# utils.write_to_file(df_combined[df_combined['FACEBOOK'].isna()]) # x
 utils.write_to_file(df_combined, 'Datasets/combined_dataset.csv')
-utils.write_to_file(df_combined.iloc[0:100])
+df_combined = pd.read_csv('Datasets/combined_dataset.csv')
+df_combined = df_combined[df_combined['FACEBOOK'].isna()]
+print(df_combined.shape)
 print('DATA CLEANING SUCCESSFUL')

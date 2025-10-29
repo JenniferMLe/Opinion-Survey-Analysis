@@ -3,3 +3,5 @@
 .virtual_documents
 *.pyc
 __pycache__/
+test.py
+Datasets/result.csv
