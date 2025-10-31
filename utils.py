@@ -30,13 +30,13 @@ def get_percent_increase(df,group,problem,weighted):
     if group == 'social_media':
         sm = ['FACEBOOK','YOUTUBE','TWITTER','INSTAGRAM','SNAPCHAT','WHATSAPP',
                 'LINKEDIN','PINTEREST','TIKTOK','BEREAL','REDDIT']
-        cols = ['RESPID','YEAR','ECON1MOD','ECON1BMOD','WEIGHT']
+        cols = ['RESPID','YEAR','ECON1MOD','ECON1BMOD','ECON1CMOD','WEIGHT']
 
         df = df[cols+sm]
         df = pd.melt(df, id_vars=cols,value_vars=sm, var_name='social_media')
         df = df[df['value']=='Use']
     
-    df = get_count(df,['YEAR',group,'ECON1MOD','ECON1BMOD'],weighted)
+    df = get_count(df,['YEAR',group,'ECON1MOD','ECON1BMOD','ECON1CMOD'],weighted)
 
     df = df[(df['YEAR'] == 2021) | (df['YEAR'] == 2022)]
 
@@ -52,8 +52,8 @@ def get_percent_increase(df,group,problem,weighted):
         ]
     else:
         conditions = [
-            ((df['ECON1BMOD'] == 'Better') | ((df['ECON1BMOD'] == 'About the same') & (df['ECON1MOD'].isin(['Good','Excellent'])))),
-            ((df['ECON1BMOD'] == 'Worse') | ((df['ECON1BMOD'] == 'About the same') & (df['ECON1MOD'].isin(['Poor','Only fair']))))
+            (df['ECON1CMOD'] == 'Positive'),
+            (df['ECON1CMOD'] == 'Negative')
         ]
     sentiment = ['Positive', 'Negative']
 

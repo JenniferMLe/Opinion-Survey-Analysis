@@ -26,7 +26,8 @@ col = {
     'Pray Frequency':'PRAY',
     'Marital Status':'MARITAL',
     'Economy Rating':'ECON1MOD',
-    'Economy Outlook in 1 Year':'ECON1BMOD'
+    'Economy Outlook':'ECON1BMOD',
+    'Economy Rating and Outlook':'ECON1CMOD'
 }
 
 # define order for categorical columns
@@ -248,58 +249,103 @@ with problem_tab:
         'Poor':'#f6492a',
         'Better':"#8fdc32",
         'About the same':'#ffc500',
-        'Worse':'#f6492a'
+        'Worse':'#f6492a',
+        'Negative':'#f6492a',
+        'Positive':"#0daa00"
     }
-
-    # this function displays a cluster bar graph dispalying yearly changes in a column in the combined dataframe
-    def graph_changes(column,weighted,title):
-        df_change = utils.get_count(df_combined,['YEAR',column],weighted)
-        df_change['percent'] = (df_change['count'] / df_change.groupby('YEAR')['count'].transform('sum')).round(4) * 100
-        df_change = df_change[df_change[column] != 'Refused']
-        utils.write_to_file(df_change)
-
-        fig = px.line(
-            df_change,
-            x='YEAR',
-            y='percent',
-            color=column,
-            title=title,
-            hover_data={
-                column:False,
-                'count':True,
-                'percent':True
-            },
-            category_orders=category_orders,
-            color_discrete_map=color_map
-        )
-        fig.update_xaxes(type='category',title_text='')
-        fig.update_traces(line=dict(width=8))
-        fig.update_layout(legend_title_text='')
-        
-        return fig
     
-    description,graphs = st.columns([0.25,1])
+    graphs = st.container()
+
+    with graphs:
+        # this function displays a cluster bar graph dispalying yearly changes in a column in the combined dataframe
+        def graph_changes(column,weighted,title):
+            df = utils.get_count(df_combined,['YEAR',column],weighted)
+            df['percent'] = round((df['count'] / df.groupby('YEAR')['count'].transform('sum')) * 100,0).astype(int)
+            df = df[df[column] != 'Refused']
+
+            fig = px.line(
+                df,
+                x='YEAR',
+                y='percent',
+                color=column,
+                title=title,
+                hover_data={
+                    column:False,
+                    'count':True,
+                    'percent':True
+                },
+                category_orders=category_orders,
+                color_discrete_map=color_map
+            )
+            fig.update_xaxes(type='category',title_text='')
+            fig.update_yaxes(range=[0, None])
+            fig.update_traces(line=dict(width=8))
+            fig.update_layout(legend_title_text='')
+            
+            return fig
+        
+        weighted = st.selectbox("Using Weighted Data", [True,False])
+        problem1,problem2,problem3 = st.columns([1,1,1])
+        with problem1: st.plotly_chart(graph_changes('ECON1MOD',weighted,'Share of Economy Ratings by Year'))
+        with problem2: st.plotly_chart(graph_changes('ECON1BMOD',weighted,'Share of Economy Outlooks by Year'))
+        with problem3: st.plotly_chart(graph_changes('ECON1CMOD',weighted,'Share of Negative Sentiment by Year'))
+
+    description = st.container()
 
     with description:
         st.markdown('<div class="border">'  
-        "From 2021 to 2022 ...<br><br>"
+        '*Sentiment is negative when outlook = "worse" or when outlook = "about the same" and rating = "poor" or "only fair".<br><br>'
+        "From 2021 to 2022 ...<br>"
 
-        "The percent of <b>poor</b> and <b>only fair</b> economy ratings \
-            <b>increaesd by 16.6 percentage points</b>, from 48.2% to 64.8%.<br><br>"
+        "- The percent of <b>poor</b> and <b>only fair</b> economy ratings \
+            <b>increaesd by 16.6 percentage points</b>, from 48.2% to 64.8%.<br>"
 
-        "The percent of <b>worse</b> economy outlooks <b>increased by 16.6 percentage points</b>, \
-            from 21.6% to 38.2%.<br><br>"
+        "- The percent of <b>worse</b> economy outlooks <b>increased by 16.6 percentage points</b>, \
+            from 21.6% to 38.2%.<br>"
         
-        "The percent of <b>better</b> economy outlooks <b>decreased by 13 percentage points</b>, \
+        "- The percent of <b>better</b> economy outlooks <b>decreased by 13 percentage points</b>, \
             from 32.8% to 19.9%."
 
         '</div>', unsafe_allow_html=True)
 
-    with graphs:
-        weighted = st.selectbox("Using Weighted Data", [True,False])
-        problem1,problem2 = st.columns([1,1])
-        with problem1: st.plotly_chart(graph_changes('ECON1MOD',weighted,'Percentage of each Economy Rating by Year'))
-        with problem2: st.plotly_chart(graph_changes('ECON1BMOD',weighted,'Percentage of each Economy Outlook by Year'))
+    facet_graph = st.container()
+
+    with facet_graph:
+        filter1,filter2,filter3 = st.columns([1,1,1])
+        
+        with filter1: metric = st.selectbox("Metric", ['Economy Rating','Economy Outlook','Economy Rating and Outlook'])
+        with filter2: dg = st.selectbox("Demographic",demographics,index=3,key=19)
+        with filter3: weighted = st.selectbox("Use Weighted Data",[True,False])
+       
+        df = utils.get_count(df_combined,['YEAR',col[metric],col[dg]],weighted)
+        df['percent'] = round((df['count'] / df.groupby(['YEAR',col[metric]])['count'].transform('sum')) * 100,0).astype(int)
+        df = df[df[col[metric]] != 'Refused']
+        df = df[df[col[dg]] != 'Refused']
+
+        fig = px.line(
+            df,
+            x='YEAR',
+            y='percent',
+            color=col[dg],
+            facet_col=col[metric],
+            title=f'Share of {dg} Categories by {metric}',
+            hover_data={
+                col[metric]:False,
+                'count':True,
+                'percent':True
+            },
+            category_orders=category_orders,
+            color_discrete_sequence=colors
+        )
+        fig.update_xaxes(type='category',title_text='')
+        fig.update_traces(line=dict(width=4))
+        fig.update_layout(legend_title_text='')
+        for annotation in fig.layout.annotations:
+            if col[metric]+ "=" in annotation.text:
+                annotation.text = annotation.text.replace(col[metric]+ "=", metric+" = ")
+
+
+        st.plotly_chart(fig)
 
 with details_tab:
     st.subheader("Increase in Percentage of Respondants with Negative Sentiment from 2021 to 2022")
@@ -309,9 +355,7 @@ with details_tab:
     with filter2: weighted = st.selectbox("Using Weighted Data", [True,False],key=10)
 
     def graph_percent_increase(group,metric,weighted,title):
-        if metric != 'Both':use = col[metric]
-        else:use = 'Both'
-        df = utils.get_percent_increase(df_combined,col[group],use,weighted)
+        df = utils.get_percent_increase(df_combined,col[group],col[metric],weighted)
         df = df[df[col[group]]!='Refused']
 
         fig = px.bar(
@@ -347,13 +391,13 @@ with details_tab:
         st.plotly_chart(fig)
 
     with graph2:
-        fig = graph_percent_increase(demographic,'Economy Outlook in 1 Year',weighted,
+        fig = graph_percent_increase(demographic,'Economy Outlook',weighted,
             'Metric 2: Economy Outlook<br><sub>Increase in "worse" outlooks</sub>')
         fig.update_layout(showlegend=False)
         st.plotly_chart(fig)
     
     with graph3:
-        fig = graph_percent_increase(demographic,'Both',weighted,
+        fig = graph_percent_increase(demographic,'Economy Rating and Outlook',weighted,
             'Metric 3: Economy Rating and Outlook<br><sub>Increase in "worse" or "about the same" outlook with "poor" or "only fair" ratings')
         st.plotly_chart(fig)
 

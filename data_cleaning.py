@@ -231,6 +231,19 @@ def create_calculated_columns(df_combined):
         'AGEGRP2', # name of new column
         np.select(conditions, group, default='Refused') # set value according to conditions 
     )
+
+    conditions = [
+        ((df_combined['ECON1BMOD'] == 'Better') | ((df_combined['ECON1BMOD'] == 'About the same') & (df_combined['ECON1MOD'].isin(['Good','Excellent'])))),
+        ((df_combined['ECON1BMOD'] == 'Worse') | ((df_combined['ECON1BMOD'] == 'About the same') & (df_combined['ECON1MOD'].isin(['Poor','Only fair']))))
+    ]
+    sentiment = ['Positive', 'Negative']
+
+    # create a new column that labels each rating as negative or positive
+    df_combined.insert(
+        df_combined.columns.get_loc('ECON1BMOD') + 1, # position we want to insert at
+        'ECON1CMOD', # name of new column
+        np.select(conditions, sentiment, default='Refused') # set value according to conditions 
+    )
     return df_combined
 
 df_combined = import_and_combine_datatsets()
