@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import utils 
+import numpy as np
 from scipy.stats import chi2_contingency
 
 # read cleaned dataset from csv file
@@ -88,10 +89,10 @@ st.markdown(
 # defining tabs
 intro_tab,demographics_tab,problem_tab,details_tab,testing_tab = st.tabs([
     'Intro',
-    "Who We're Studying",
+    "Survey Participants",
     'Changes Over Time',
     'Driving Force',
-    'Significant Influence'
+    'Correlation and Casuation'
 ])
 
 with intro_tab:
@@ -279,7 +280,7 @@ with problem_tab:
             )
             fig.update_xaxes(type='category',title_text='')
             fig.update_yaxes(range=[0, None])
-            fig.update_traces(line=dict(width=8))
+            fig.update_traces(line=dict(width=6))
             fig.update_layout(legend_title_text='')
             
             return fig
@@ -308,9 +309,84 @@ with problem_tab:
 
         '</div>', unsafe_allow_html=True)
 
+with details_tab:
+    st.subheader("Increase in Percentage of Respondants with Negative Sentiment from 2021 to 2022")
+
+    increase_graphs = st.container()
+
+    with increase_graphs:
+        filter1,filter2 = st.columns([1,1])
+        with filter1: demographic = st.selectbox("Demographic", demographics+['Social Media'], index=3)
+        with filter2: weighted = st.selectbox("Using Weighted Data", [True,False],key=10)
+
+        def graph_percent_increase(group,metric,weighted,title):
+            df = utils.get_percent_increase(df_combined,col[group],col[metric],weighted)
+            df = df[df[col[group]]!='Refused']
+
+            fig = px.bar(
+                df,
+                x=col[group],
+                y='PercentDiff',
+                title=title,
+                color=df.columns[0],
+                hover_data={
+                    '2021_Percent':True,
+                    '2022_Percent':True,
+                    '2021_Count':True,
+                    '2022_Count':True,
+                    col[group]:False
+                },
+                text_auto='.0f',
+                category_orders=category_orders,
+                color_discrete_sequence=colors
+            )
+            (fig
+                .update_xaxes(title=group)
+                .update_yaxes(title="Percentage Points Increase")
+                .update_layout(legend_title_text=group)
+            )
+            return fig
+        
+        graph1,graph2,graph3 = st.columns([1,1,1.25])
+            
+        with graph1:
+            fig = graph_percent_increase(demographic,'Economy Rating',weighted,
+                'Metric 1: Economy Rating<br><sub>Increase in "poor" or "only fair" ratings</sub>')
+            fig.update_layout(showlegend=False)
+            st.plotly_chart(fig)
+
+        with graph2:
+            fig = graph_percent_increase(demographic,'Economy Outlook',weighted,
+                'Metric 2: Economy Outlook<br><sub>Increase in "worse" outlooks</sub>')
+            fig.update_layout(showlegend=False)
+            st.plotly_chart(fig)
+        
+        with graph3:
+            fig = graph_percent_increase(demographic,'Economy Rating and Outlook',weighted,
+                'Metric 3: Economy Rating and Outlook<br><sub>Increase in "worse" or "about the same" outlook with "poor" or "only fair" ratings')
+            st.plotly_chart(fig)
+
+        st.markdown('<div class="border">'  
+    "- The <b>highest income group (>$70K)</b> have the greatest increase " \
+    "in negative sentiment by metric 3.<br>"
+
+    "- Individuals with a <b>Bachelor's Degree or higher</b> have the greatest increase in " \
+    "negative sentiment by metric 2 and 3.<br>"
+
+    "- <b>Religious individuals (faith importance = very important)</b> have the greatest increase " \
+    "in negative economy ratings but the lowest increase in negative economy outlook.<br>" 
+    
+    "- <b>LinkedIn users</b> have the highest increase in negative sentiment by all 3 metrics.<br>"
+
+    "- <b>Republicans</b> have the highest increase in negative economy ratings " \
+    "but the lowest increase in economy outlook."
+    '</div>', unsafe_allow_html=True)
+    
     facet_graph = st.container()
 
     with facet_graph:
+        st.subheader("Share of Demographic Categories")
+        
         filter1,filter2,filter3 = st.columns([1,1,1])
         
         with filter1: metric = st.selectbox("Metric", ['Economy Rating','Economy Outlook','Economy Rating and Outlook'])
@@ -347,137 +423,102 @@ with problem_tab:
 
         st.plotly_chart(fig)
 
-with details_tab:
-    st.subheader("Increase in Percentage of Respondants with Negative Sentiment from 2021 to 2022")
+# with testing_tab:
+#     correlation = st.container()
 
-    filter1,filter2 = st.columns([1,1])
-    with filter1: demographic = st.selectbox("Demographic", demographics+['Social Media'], index=3)
-    with filter2: weighted = st.selectbox("Using Weighted Data", [True,False],key=10)
+#     with correlation:
+#         st.subheader("Is using LinkedIn correlated with negative sentiment 2022 onwards?")
+#         metric = 'ECON1MOD'
+#         dg = 'INCOMEGRP'
 
-    def graph_percent_increase(group,metric,weighted,title):
-        df = utils.get_percent_increase(df_combined,col[group],col[metric],weighted)
-        df = df[df[col[group]]!='Refused']
+#         df = df_combined
+#         df = df[[metric,dg]]
+#         df = df[df[metric] != 'Refused']
+#         df = df[df[dg] != 'Refused']
+#         df = pd.crosstab(df[dg], df[metric])
+#         chi2, p, dof, expected = chi2_contingency(df)
+#         st.write("chi-squared value = ",chi2)
+#         st.write("p=",p)
 
-        fig = px.bar(
-            df,
-            x=col[group],
-            y='PercentDiff',
-            title=title,
-            color=df.columns[0],
-            hover_data={
-                '2021_Percent':True,
-                '2022_Percent':True,
-                '2021_Count':True,
-                '2022_Count':True,
-                col[group]:False
-            },
-            text_auto='.0f',
-            category_orders=category_orders,
-            color_discrete_sequence=colors
-        )
-        (fig
-            .update_xaxes(title=group)
-            .update_yaxes(title="Percentage Points Increase")
-            .update_layout(legend_title_text=group)
-        )
-        return fig
-    
-    graph1,graph2,graph3 = st.columns([1,1,1.25])
+#         n = 0
+#         for col in df.columns:
+#             n += df[col].sum()
         
-    with graph1:
-        fig = graph_percent_increase(demographic,'Economy Rating',weighted,
-            'Metric 1: Economy Rating<br><sub>Increase in "poor" or "only fair" ratings</sub>')
-        fig.update_layout(showlegend=False)
-        st.plotly_chart(fig)
+#         st.write("n = ",n)
 
-    with graph2:
-        fig = graph_percent_increase(demographic,'Economy Outlook',weighted,
-            'Metric 2: Economy Outlook<br><sub>Increase in "worse" outlooks</sub>')
-        fig.update_layout(showlegend=False)
-        st.plotly_chart(fig)
+#         k = min(len(df),len(df.columns))
+
+#         st.write("k = ", k)
+
+#         st.write("cramer's v = chi-squared/n(k-1) = ", chi2/(n*(k-1)))
+
+#     casuation = st.container()
+
+#     with casuation:
+#         st.subheader("Does using LinkedIn cause negative sentiment 2022 onwards?")
     
-    with graph3:
-        fig = graph_percent_increase(demographic,'Economy Rating and Outlook',weighted,
-            'Metric 3: Economy Rating and Outlook<br><sub>Increase in "worse" or "about the same" outlook with "poor" or "only fair" ratings')
-        st.plotly_chart(fig)
-
-    st.markdown('<div class="border">'  
-    "- The <b>highest income group (>$70K)</b> have the greatest increase " \
-    "in negative sentiment by metric 3.<br>"
-
-    "- Individuals with a <b>Bachelor's Degree or higher</b> have the greatest increase in " \
-    "negative sentiment by metric 2 and 3.<br>"
-
-    "- <b>Religious individuals (faith importance = very important)</b> have the greatest increase " \
-    "in negative economy ratings but the lowest increase in negative economy outlook.<br>" 
     
-    "- <b>LinkedIn users</b> have the highest increase in negative sentiment by all 3 metrics.<br>"
 
-    "- <b>Republicans</b> have the highest increase in negative economy ratings " \
-    "but the lowest increase in economy outlook."
-    '</div>', unsafe_allow_html=True)
+
+    # st.subheader('Do Certain Demographics Significantly Impact Negative Sentiment in 2022')
+
+    # filters,hypothesis = st.columns([1,4])
+    # with filters:
+    #     group = st.selectbox("Test Group",demographics)
+    #     metric = st.selectbox("Metric for Negative Sentiment",['Economy Rating','Economy Outlook in 1 Year','Both'])
+    #     weighted = st.selectbox("Using Weighted Data",[True,False],key=9)
     
-with testing_tab:
-    st.subheader('Do Certain Demographics Significantly Impact Negative Sentiment in 2022')
+    # df = df_combined[(df_combined['YEAR']== 2022)]
+    # if metric == 'Economy Rating':
+    #     df_neg = df[df['ECON1MOD'].isin(['Poor','Only fair'])]
+    #     df_pos = df[df['ECON1MOD'].isin(['Excellent','Good'])]
+    # elif metric == 'Economy Outlook in 1 Year':
+    #     df_neg = df[df['ECON1BMOD'] == 'Worse']
+    #     df_pos = df[df['ECON1BMOD'].isin(['About the same','Better'])]
+    # else:
+    #     df_neg = df[(df['ECON1BMOD'] == 'Worse') | ((df['ECON1BMOD'] == 'About the same') & (df['ECON1MOD'].isin(['Poor','Only fair'])))]
+    #     df_pos = df[(df['ECON1BMOD'] == 'Better') | ((df['ECON1BMOD'] == 'About the same') & (df['ECON1MOD'].isin(['Good','Excellent'])))]
 
-    filters,hypothesis = st.columns([1,4])
-    with filters:
-        group = st.selectbox("Test Group",demographics)
-        metric = st.selectbox("Metric for Negative Sentiment",['Economy Rating','Economy Outlook in 1 Year','Both'])
-        weighted = st.selectbox("Using Weighted Data",[True,False],key=9)
-    
-    df = df_combined[(df_combined['YEAR']== 2022)]
-    if metric == 'Economy Rating':
-        df_neg = df[df['ECON1MOD'].isin(['Poor','Only fair'])]
-        df_pos = df[df['ECON1MOD'].isin(['Excellent','Good'])]
-    elif metric == 'Economy Outlook in 1 Year':
-        df_neg = df[df['ECON1BMOD'] == 'Worse']
-        df_pos = df[df['ECON1BMOD'].isin(['About the same','Better'])]
-    else:
-        df_neg = df[(df['ECON1BMOD'] == 'Worse') | ((df['ECON1BMOD'] == 'About the same') & (df['ECON1MOD'].isin(['Poor','Only fair'])))]
-        df_pos = df[(df['ECON1BMOD'] == 'Better') | ((df['ECON1BMOD'] == 'About the same') & (df['ECON1MOD'].isin(['Good','Excellent'])))]
+    # df_neg = utils.get_count(df_neg,[col[group]],weighted)
+    # df_pos = utils.get_count(df_pos,[col[group]],weighted)
 
-    df_neg = utils.get_count(df_neg,[col[group]],weighted)
-    df_pos = utils.get_count(df_pos,[col[group]],weighted)
+    # df = pd.DataFrame()
+    # df[col[group]] = df_neg[col[group]]
+    # df['CountNeg'] = df_neg['count']
+    # df['CountPos'] = df_pos['count']
+    # df['Share of Negative Sentiment (%)'] = round((df['CountNeg'] / (df['CountNeg'].sum())*100),2)
+    # total = df['CountNeg'].sum() + df['CountPos'].sum()
+    # df['Share of Total Responses (%)'] = round(((df['CountNeg'] + df['CountPos']) / total) * 100, 2)
 
-    df = pd.DataFrame()
-    df[col[group]] = df_neg[col[group]]
-    df['CountNeg'] = df_neg['count']
-    df['CountPos'] = df_pos['count']
-    df['Share of Negative Sentiment (%)'] = round((df['CountNeg'] / (df['CountNeg'].sum())*100),2)
-    total = df['CountNeg'].sum() + df['CountPos'].sum()
-    df['Share of Total Responses (%)'] = round(((df['CountNeg'] + df['CountPos']) / total) * 100, 2)
+    # chi2, p, dof, expected = chi2_contingency(df[['CountNeg','CountPos']])
+    # if p < 0.05: s = ''
+    # else: s = 'don\'t'
 
-    chi2, p, dof, expected = chi2_contingency(df[['CountNeg','CountPos']])
-    if p < 0.05: s = ''
-    else: s = 'don\'t'
-
-    with hypothesis:
-        st.markdown('<div class="border">'  
+    # with hypothesis:
+    #     st.markdown('<div class="border">'  
         
-        "If there's no significant impact, each category's share of negative \
-        sentiment should be about the same as its share of total responses. <br><br>"
+    #     "If there's no significant impact, each category's share of negative \
+    #     sentiment should be about the same as its share of total responses. <br><br>"
 
-        "For example, if 25% of responses to 'Economy Rating' have an income of <$40K, \
-        25% of negative economy ratings should be from income = <$40K if income does \
-        not impact negative sentiment. The table below compares the two shares. \
-        We'll test for significance using a <b>chi-squared test</b>.<br><br>"
+    #     "For example, if 25% of responses to 'Economy Rating' have an income of <$40K, \
+    #     25% of negative economy ratings should be from income = <$40K if income does \
+    #     not impact negative sentiment. The table below compares the two shares. \
+    #     We'll test for significance using a <b>chi-squared test</b>.<br><br>"
                     
-        f"<b>Null Hypothesis</b>: {group} does not significantly impact negative sentiment \
-        i.e {group} and negative sentiment are independent.<br>"
+    #     f"<b>Null Hypothesis</b>: {group} does not significantly impact negative sentiment \
+    #     i.e {group} and negative sentiment are independent.<br>"
 
-        f"<b>Alternative Hypothesis</b>: {group} significantly impacts negative sentiment \
-        i.e {group} and negative sentiment are dependent.<br><br>"
+    #     f"<b>Alternative Hypothesis</b>: {group} significantly impacts negative sentiment \
+    #     i.e {group} and negative sentiment are dependent.<br><br>"
 
-        "<b>if p-value < 0.05 → reject the null hypothesis</b> \
-            → the alternative hypothesis is more likely<br>"
+    #     "<b>if p-value < 0.05 → reject the null hypothesis</b> \
+    #         → the alternative hypothesis is more likely<br>"
 
-       "<b>if p-value ≥ 0.05 → don't reject the null hypothesis</b> \
-            → the null hypothesis is more likely<br><br>"
+    #    "<b>if p-value ≥ 0.05 → don't reject the null hypothesis</b> \
+    #         → the null hypothesis is more likely<br><br>"
 
-        f"<b>p-value = {round(p,2)} → {s} reject the null hypothesis"
+    #     f"<b>p-value = {round(p,2)} → {s} reject the null hypothesis"
         
-        '</div>', unsafe_allow_html=True)
+    #     '</div>', unsafe_allow_html=True)
         
-    st.dataframe(df[[col[group],'Share of Negative Sentiment (%)','Share of Total Responses (%)']])
-    
+    # st.dataframe(df[[col[group],'Share of Negative Sentiment (%)','Share of Total Responses (%)']])
