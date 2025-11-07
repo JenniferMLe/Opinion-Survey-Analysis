@@ -4,6 +4,7 @@ import plotly.express as px
 import utils 
 import numpy as np
 from scipy.stats import chi2_contingency
+import math 
 
 # read cleaned dataset from csv file
 df_combined = pd.read_csv('Datasets/combined_dataset.csv')
@@ -14,33 +15,35 @@ demographics = ['Age','Race','Gender','Income','Education','Region','Party',
 
 # maps selection label to column names
 col = {
-    'Age':'AGEGRP2',
-    'Race':'RACE',
-    'Gender':'GENDER',
-    'Income':'INCOMEGRP',
-    'Region':'REGION',
-    'Education':'EDUCATION',
+    'Age':'Age_Cat',
+    'Race':'Race',
+    'Gender':'Gender',
+    'Income':'Income_Cat',
+    'Region':'Region',
+    'Education':'Education',
     'Social Media':'social_media',
-    'Party':'PARTY',
-    'Religion':'RELIG',
-    'Faith Importance':'RELIMP',
-    'Pray Frequency':'PRAY',
-    'Marital Status':'MARITAL',
-    'Economy Rating':'ECON1MOD',
-    'Economy Outlook':'ECON1BMOD',
-    'Economy Rating and Outlook':'ECON1CMOD'
+    'Party':'Party',
+    'Religion':'Religion',
+    'Faith Importance':'Faith_Importance',
+    'Pray Frequency':'Pray_Freq',
+    'Marital Status':'Marital',
+    'Economy Rating':'Econ_Rating',
+    'Economy Rating Cat':'Econ_Rating_Cat',
+    'Economy Outlook':'Econ_Outlook',
+    'Economy Outlook Cat': 'Econ_Outlook_Cat',
+    'Economy Rating and Outlook':'Econ_Rating_Outlook'
 }
 
 # define order for categorical columns
 category_orders = {
-    'AGEGRP2':['18-24','25-39','40-59','60-79','80+'],
-    'INCOMEGRP':['< $40K','$40-70K','$70-100K','$100K+'],
-    'ECON1MOD':['Poor','Only fair','Good','Excellent'],
-    'ECON1BMOD':['Better','About the same','Worse'],
-    'PARTY':['Democrat','Republican','Independent','Other'],
-    'RELIMP':['Not at all important','Not too important','Somewhat important','Very important'],
-    'MARITAL':['Never married','Living with a partner','Married','Divorced','Widowed'],
-    'EDUCATION':[
+    'Age_Cat':['18-24','25-39','40-59','60-79','80+'],
+    'Income_Cat':['< $40K','$40-70K','$70-100K','$100K+'],
+    'Econ_Rating':['Poor','Only Fair','Good','Excellent'],
+    'Econ_Outlook':['Worse','About the same','Better'],
+    'Party':['Democrat','Republican','Independent','Other'],
+    'Faith_Importance':['Not at all important','Not too important','Somewhat important','Very important'],
+    'Marital':['Never married','Living with a partner','Married','Divorced','Widowed'],
+    'Education':[
         "No schooling completed",
         "Some High School",
         "High School",
@@ -49,7 +52,7 @@ category_orders = {
         "Bachelor's Degree",
         "Master's Degree or Higher"
     ],
-    'PRAY':[
+    'Pray_Freq':[
         'Never',
         'Seldom',
         'A few times a month',
@@ -122,19 +125,23 @@ with demographics_tab:
 
     with basic_graph:
         df = utils.get_count(df_combined,[col[dg1]],weighted)
-        df['percent'] = (df['count'] / df['count'].sum()).round(2) * 100
+        df['share'] = (df['count'] / df['count'].sum()).round(2) * 100
         df = df[df[col[dg1]] != 'Refused']
 
         fig = px.bar(
             df, 
             x=col[dg1], 
-            y='percent',
+            y='share',
             title= f'{dg1} Categories Share',
-            text = df['percent'].astype(int).astype(str) + '%',
+            text = df['share'].astype(int).astype(str) + '%',
             hover_data={
                 'count':True,
-                'percent':False,
+                'share':False,
                 col[dg1]:False
+            },
+            labels={
+                'count':'n',
+                'text':'share'
             },
             category_orders=category_orders,
             template='plotly_dark',
@@ -166,6 +173,10 @@ with demographics_tab:
                     col[dg1]:False,
                     col[dg2]:False
                 },
+                labels={
+                    'count':'n',
+                    'text':'share'
+                },
                 category_orders=category_orders,
                 template='plotly_dark',
                 color_discrete_sequence=colors,
@@ -179,8 +190,8 @@ with demographics_tab:
     social_media_graph = st.container()
 
     with social_media_graph:
-        sm = ['FACEBOOK','YOUTUBE','TWITTER','INSTAGRAM','SNAPCHAT','WHATSAPP',
-                'LINKEDIN','PINTEREST','TIKTOK','BEREAL','REDDIT']
+        sm = ['Facebook', 'Youtube', 'Twitter', 'Instagram', 'Snapchat',
+            'Whatsapp', 'Linkedin', 'Pinterest', 'Tiktok', 'Bereal', 'Reddit']
 
         social_media_df = pd.DataFrame()
         for s in sm:
@@ -203,6 +214,10 @@ with demographics_tab:
                 'count':True,
                 'percent':False,
             },
+            labels = {
+                'count':'n',
+                'text':'usage'
+            },
             template='plotly_dark',
             color_discrete_sequence=colors,
             color='social_media'
@@ -216,13 +231,15 @@ with demographics_tab:
 
     with table:
         summary_table = pd.DataFrame()
-        for dg in demographics[::-1]:
-            df = utils.get_count(df_combined,[col[dg]],False)
+        for dg in sm + demographics[::-1]:
+            if dg in col:
+                dg = col[dg]
+            df = utils.get_count(df_combined,dg,False)
             df['percent'] = df['percent'] = (df['count'] / df['count'].sum()).round(2) * 100
-            df = df.rename(columns={col[dg]:'group'})
+            df = df.rename(columns={dg:'group'})
             df.insert(0, 'demographic', dg)
 
-            df_weighted = utils.get_count(df_combined,[col[dg]],True)
+            df_weighted = utils.get_count(df_combined,dg,True)
             df_weighted['percent'] = df_weighted['percent'] = (df_weighted['count'] / df_weighted['count'].sum()).round(2) * 100
 
             df['weighted_count'] = df_weighted['count']
@@ -246,7 +263,7 @@ with problem_tab:
     color_map = {
         'Excellent':"#0daa00",
         'Good':'#8fdc32',
-        'Only fair':'#ffc500',
+        'Only Fair':'#ffc500',
         'Poor':'#f6492a',
         'Better':"#8fdc32",
         'About the same':'#ffc500',
@@ -260,20 +277,24 @@ with problem_tab:
     with graphs:
         # this function displays a cluster bar graph dispalying yearly changes in a column in the combined dataframe
         def graph_changes(column,weighted,title):
-            df = utils.get_count(df_combined,['YEAR',column],weighted)
-            df['percent'] = round((df['count'] / df.groupby('YEAR')['count'].transform('sum')) * 100,0).astype(int)
+            df = utils.get_count(df_combined,['Year',column],weighted)
+            df['share'] = round((df['count'] / df.groupby('Year')['count'].transform('sum')) * 100,0).astype(int)
             df = df[df[column] != 'Refused']
 
             fig = px.line(
                 df,
-                x='YEAR',
-                y='percent',
+                x='Year',
+                y='share',
                 color=column,
                 title=title,
                 hover_data={
                     column:False,
                     'count':True,
-                    'percent':True
+                    'share':True
+                },
+                labels = {
+                    'count':'n',
+                    'share':'Share(%)',
                 },
                 category_orders=category_orders,
                 color_discrete_map=color_map
@@ -287,9 +308,9 @@ with problem_tab:
         
         weighted = st.selectbox("Using Weighted Data", [True,False])
         problem1,problem2,problem3 = st.columns([1,1,1])
-        with problem1: st.plotly_chart(graph_changes('ECON1MOD',weighted,'Share of Economy Ratings by Year'))
-        with problem2: st.plotly_chart(graph_changes('ECON1BMOD',weighted,'Share of Economy Outlooks by Year'))
-        with problem3: st.plotly_chart(graph_changes('ECON1CMOD',weighted,'Share of Negative Sentiment by Year'))
+        with problem1: st.plotly_chart(graph_changes('Econ_Rating',weighted,'Share of Economy Ratings by Year'))
+        with problem2: st.plotly_chart(graph_changes('Econ_Outlook',weighted,'Share of Economy Outlooks by Year'))
+        with problem3: st.plotly_chart(graph_changes('Econ_Rating_Outlook',weighted,'Share of Negative Sentiment by Year'))
 
     description = st.container()
 
@@ -310,11 +331,12 @@ with problem_tab:
         '</div>', unsafe_allow_html=True)
 
 with details_tab:
-    st.subheader("Increase in Percentage of Respondants with Negative Sentiment from 2021 to 2022")
 
     increase_graphs = st.container()
 
     with increase_graphs:
+        st.subheader("Increase in Percentage of Respondants with Negative Sentiment from 2021 to 2022")
+
         filter1,filter2 = st.columns([1,1])
         with filter1: demographic = st.selectbox("Demographic", demographics+['Social Media'], index=3)
         with filter2: weighted = st.selectbox("Using Weighted Data", [True,False],key=10)
@@ -326,14 +348,14 @@ with details_tab:
             fig = px.bar(
                 df,
                 x=col[group],
-                y='PercentDiff',
+                y='percent_diff',
                 title=title,
                 color=df.columns[0],
                 hover_data={
-                    '2021_Percent':True,
-                    '2022_Percent':True,
-                    '2021_Count':True,
-                    '2022_Count':True,
+                    'percent_2021':True,
+                    'percent_2022':True,
+                    'n_2021':True,
+                    'n_2022':True,
                     col[group]:False
                 },
                 text_auto='.0f',
@@ -350,13 +372,13 @@ with details_tab:
         graph1,graph2,graph3 = st.columns([1,1,1.25])
             
         with graph1:
-            fig = graph_percent_increase(demographic,'Economy Rating',weighted,
+            fig = graph_percent_increase(demographic,'Economy Rating Cat',weighted,
                 'Metric 1: Economy Rating<br><sub>Increase in "poor" or "only fair" ratings</sub>')
             fig.update_layout(showlegend=False)
             st.plotly_chart(fig)
 
         with graph2:
-            fig = graph_percent_increase(demographic,'Economy Outlook',weighted,
+            fig = graph_percent_increase(demographic,'Economy Outlook Cat',weighted,
                 'Metric 2: Economy Outlook<br><sub>Increase in "worse" outlooks</sub>')
             fig.update_layout(showlegend=False)
             st.plotly_chart(fig)
@@ -367,25 +389,25 @@ with details_tab:
             st.plotly_chart(fig)
 
         st.markdown('<div class="border">'  
-    "- The <b>highest income group (>$70K)</b> have the greatest increase " \
-    "in negative sentiment by metric 3.<br>"
+            "- The <b>highest income group (>$70K)</b> have the greatest increase " \
+            "in negative sentiment by metric 3.<br>"
 
-    "- Individuals with a <b>Bachelor's Degree or higher</b> have the greatest increase in " \
-    "negative sentiment by metric 2 and 3.<br>"
+            "- Individuals with a <b>Bachelor's Degree or higher</b> have the greatest increase in " \
+            "negative sentiment by metric 2 and 3.<br>"
 
-    "- <b>Religious individuals (faith importance = very important)</b> have the greatest increase " \
-    "in negative economy ratings but the lowest increase in negative economy outlook.<br>" 
-    
-    "- <b>LinkedIn users</b> have the highest increase in negative sentiment by all 3 metrics.<br>"
+            "- <b>Religious individuals (faith importance = very important)</b> have the greatest increase " \
+            "in negative economy ratings but the lowest increase in negative economy outlook.<br>" 
+            
+            "- <b>LinkedIn users</b> have the highest increase in negative sentiment by all 3 metrics.<br>"
 
-    "- <b>Republicans</b> have the highest increase in negative economy ratings " \
-    "but the lowest increase in economy outlook."
-    '</div>', unsafe_allow_html=True)
-    
+            "- <b>Republicans</b> have the highest increase in negative economy ratings " \
+            "but the lowest increase in economy outlook."
+        '</div>', unsafe_allow_html=True)
+
     facet_graph = st.container()
 
     with facet_graph:
-        st.subheader("Share of Demographic Categories")
+        st.subheader("Distribution of Economy Ratings and Outlooks Amoung Demographic Categories")
         
         filter1,filter2,filter3 = st.columns([1,1,1])
         
@@ -393,22 +415,27 @@ with details_tab:
         with filter2: dg = st.selectbox("Demographic",demographics,index=3,key=19)
         with filter3: weighted = st.selectbox("Use Weighted Data",[True,False])
        
-        df = utils.get_count(df_combined,['YEAR',col[metric],col[dg]],weighted)
-        df['percent'] = round((df['count'] / df.groupby(['YEAR',col[metric]])['count'].transform('sum')) * 100,0).astype(int)
+        df = utils.get_count(df_combined,['Year',col[metric],col[dg]],weighted)
+        df['share'] = round((df['count'] / df.groupby(['Year',col[metric]])['count'].transform('sum')) * 100,0).astype(int)
         df = df[df[col[metric]] != 'Refused']
         df = df[df[col[dg]] != 'Refused']
 
         fig = px.line(
             df,
-            x='YEAR',
-            y='percent',
+            x='Year',
+            y='share',
             color=col[dg],
             facet_col=col[metric],
-            title=f'Share of {dg} Categories by {metric}',
+            title=f'{dg} Categories Share by {metric} and Year',
             hover_data={
                 col[metric]:False,
                 'count':True,
-                'percent':True
+                'share':True,
+                'Year':False
+            },
+            labels = {
+                'count':'n',
+                'share':'share(%)',
             },
             category_orders=category_orders,
             color_discrete_sequence=colors
@@ -420,105 +447,71 @@ with details_tab:
             if col[metric]+ "=" in annotation.text:
                 annotation.text = annotation.text.replace(col[metric]+ "=", metric+" = ")
 
+        st.plotly_chart(fig)
+
+        # st.markdown('<div class="border">'  
+        #     "- The <b>highest income group (>$70K)</b> have the greatest increase " \
+        #     "in negative sentiment by metric 3.<br>"
+        # '</div>', unsafe_allow_html=True)
+
+with testing_tab:
+    correlation = st.container()
+
+    with correlation:
+        filter1,filter2,blank = st.columns([1,1,2]) 
+        with filter1: year = st.slider('year',2020,2025,value=2022)
+        with filter2: weighted = st.radio('',['Use weighted data', 'Use raw data'])
+        df = df_combined[df_combined['Year']==year]
+
+        sm = ['Facebook', 'Youtube', 'Twitter', 'Instagram', 'Snapchat',
+            'Whatsapp', 'Linkedin', 'Pinterest', 'Tiktok', 'Bereal', 'Reddit']
+        
+        metrics = ['Econ_Rating','Econ_Rating_Cat','Econ_Outlook','Econ_Outlook_Cat','Econ_Rating_Outlook']
+        all_cors = []
+        for metric in metrics:
+            cors = []
+            for feature in demographics + sm:
+                if feature in col:
+                    feature = col[feature]
+                ct = df
+                ct = ct[ct[metric] != 'Refused']
+                ct = ct[ct[feature] != 'Refused']
+
+                if weighted == 'Use weighted data':
+                    ct = pd.crosstab(ct[feature], ct[metric], values=ct['Weight'], aggfunc='sum')
+                else:
+                    ct = pd.crosstab(ct[feature], ct[metric])
+
+                if ct.size == 0:
+                    cors.append(None)
+                    continue
+
+                ct = ct.fillna(0)
+                chi2, p, dof, expected = chi2_contingency(ct)
+
+                n = 0
+                for c in ct.columns:
+                    n += ct[c].sum()
+
+                k = min(len(ct),len(ct.columns))
+                cors.append(round(math.sqrt(chi2/(n*(k-1))),2))
+
+            all_cors.append(cors)
+
+            utils.write_to_file(pd.DataFrame(all_cors))
+
+        data = pd.DataFrame(all_cors,index=metrics,columns=demographics+sm)
+
+        fig = px.imshow(data, text_auto=True, title='Correlation Strength (0 to 1) Using Cramer\'s V')
 
         st.plotly_chart(fig)
 
-# with testing_tab:
-#     correlation = st.container()
 
-#     with correlation:
-#         st.subheader("Is using LinkedIn correlated with negative sentiment 2022 onwards?")
-#         metric = 'ECON1MOD'
-#         dg = 'INCOMEGRP'
-
-#         df = df_combined
-#         df = df[[metric,dg]]
-#         df = df[df[metric] != 'Refused']
-#         df = df[df[dg] != 'Refused']
-#         df = pd.crosstab(df[dg], df[metric])
-#         chi2, p, dof, expected = chi2_contingency(df)
-#         st.write("chi-squared value = ",chi2)
-#         st.write("p=",p)
-
-#         n = 0
-#         for col in df.columns:
-#             n += df[col].sum()
-        
-#         st.write("n = ",n)
-
-#         k = min(len(df),len(df.columns))
-
-#         st.write("k = ", k)
-
-#         st.write("cramer's v = chi-squared/n(k-1) = ", chi2/(n*(k-1)))
-
-#     casuation = st.container()
-
-#     with casuation:
-#         st.subheader("Does using LinkedIn cause negative sentiment 2022 onwards?")
-    
-    
-
-
-    # st.subheader('Do Certain Demographics Significantly Impact Negative Sentiment in 2022')
-
-    # filters,hypothesis = st.columns([1,4])
-    # with filters:
-    #     group = st.selectbox("Test Group",demographics)
-    #     metric = st.selectbox("Metric for Negative Sentiment",['Economy Rating','Economy Outlook in 1 Year','Both'])
-    #     weighted = st.selectbox("Using Weighted Data",[True,False],key=9)
-    
-    # df = df_combined[(df_combined['YEAR']== 2022)]
-    # if metric == 'Economy Rating':
-    #     df_neg = df[df['ECON1MOD'].isin(['Poor','Only fair'])]
-    #     df_pos = df[df['ECON1MOD'].isin(['Excellent','Good'])]
-    # elif metric == 'Economy Outlook in 1 Year':
-    #     df_neg = df[df['ECON1BMOD'] == 'Worse']
-    #     df_pos = df[df['ECON1BMOD'].isin(['About the same','Better'])]
-    # else:
-    #     df_neg = df[(df['ECON1BMOD'] == 'Worse') | ((df['ECON1BMOD'] == 'About the same') & (df['ECON1MOD'].isin(['Poor','Only fair'])))]
-    #     df_pos = df[(df['ECON1BMOD'] == 'Better') | ((df['ECON1BMOD'] == 'About the same') & (df['ECON1MOD'].isin(['Good','Excellent'])))]
-
-    # df_neg = utils.get_count(df_neg,[col[group]],weighted)
-    # df_pos = utils.get_count(df_pos,[col[group]],weighted)
-
-    # df = pd.DataFrame()
-    # df[col[group]] = df_neg[col[group]]
-    # df['CountNeg'] = df_neg['count']
-    # df['CountPos'] = df_pos['count']
-    # df['Share of Negative Sentiment (%)'] = round((df['CountNeg'] / (df['CountNeg'].sum())*100),2)
-    # total = df['CountNeg'].sum() + df['CountPos'].sum()
-    # df['Share of Total Responses (%)'] = round(((df['CountNeg'] + df['CountPos']) / total) * 100, 2)
-
-    # chi2, p, dof, expected = chi2_contingency(df[['CountNeg','CountPos']])
-    # if p < 0.05: s = ''
-    # else: s = 'don\'t'
-
-    # with hypothesis:
-    #     st.markdown('<div class="border">'  
-        
-    #     "If there's no significant impact, each category's share of negative \
-    #     sentiment should be about the same as its share of total responses. <br><br>"
-
-    #     "For example, if 25% of responses to 'Economy Rating' have an income of <$40K, \
-    #     25% of negative economy ratings should be from income = <$40K if income does \
-    #     not impact negative sentiment. The table below compares the two shares. \
-    #     We'll test for significance using a <b>chi-squared test</b>.<br><br>"
-                    
-    #     f"<b>Null Hypothesis</b>: {group} does not significantly impact negative sentiment \
-    #     i.e {group} and negative sentiment are independent.<br>"
-
-    #     f"<b>Alternative Hypothesis</b>: {group} significantly impacts negative sentiment \
-    #     i.e {group} and negative sentiment are dependent.<br><br>"
-
-    #     "<b>if p-value < 0.05 → reject the null hypothesis</b> \
-    #         → the alternative hypothesis is more likely<br>"
-
-    #    "<b>if p-value ≥ 0.05 → don't reject the null hypothesis</b> \
-    #         → the null hypothesis is more likely<br><br>"
-
-    #     f"<b>p-value = {round(p,2)} → {s} reject the null hypothesis"
-        
-    #     '</div>', unsafe_allow_html=True)
-        
-    # st.dataframe(df[[col[group],'Share of Negative Sentiment (%)','Share of Total Responses (%)']])
+        st.markdown('<div class="border">'  
+            "- <b>Correlation</b> is the <b>association or dependence</b> between two variables.<br>" 
+            "- We'll use <b>Cramer's V</b> to measure correlation since NPORS data is nominal "
+            "(categories instead of numbers) and ordinal (categories with rank).<br>"
+            "- Cramer's V <b>ranges from 0 to 1</b> with 0 being no dependence and 1 being complete dependence.<br>"
+            "- <b>Guideline</b>: ≤ 0.2: weak association, 0.2 < X ≤ 0.6: moderate association, > 0.6: strong assocation"
+            ""
+        '</div>', unsafe_allow_html=True)

@@ -14,11 +14,11 @@ def get_distinct_values(df, columns):
 
 def get_count(df,cols,weighted):
     if weighted:
-        column = 'WEIGHT'
+        column = 'Weight'
         # as_index=False doesn't make group labels the index
         df = df.groupby(cols, as_index=False)[column].sum().round(0)
     else:
-        column = 'RESPID'
+        column = 'Respid'
         df = df.groupby(cols, as_index=False)[column].count()
     
     df = df.rename(columns={column:'count'})
@@ -28,49 +28,30 @@ def get_count(df,cols,weighted):
 
 def get_percent_increase(df,group,problem,weighted):
     if group == 'social_media':
-        sm = ['FACEBOOK','YOUTUBE','TWITTER','INSTAGRAM','SNAPCHAT','WHATSAPP',
-                'LINKEDIN','PINTEREST','TIKTOK','BEREAL','REDDIT']
-        cols = ['RESPID','YEAR','ECON1MOD','ECON1BMOD','ECON1CMOD','WEIGHT']
+        sm = ['Facebook', 'Youtube', 'Twitter', 'Instagram', 'Snapchat',
+            'Whatsapp', 'Linkedin', 'Pinterest', 'Tiktok', 'Bereal', 'Reddit']
+        
+        cols = ['Respid','Year',problem,'Weight']
 
         df = df[cols+sm]
         df = pd.melt(df, id_vars=cols,value_vars=sm, var_name='social_media')
         df = df[df['value']=='Use']
     
-    df = get_count(df,['YEAR',group,'ECON1MOD','ECON1BMOD','ECON1CMOD'],weighted)
+    df = get_count(df,['Year',group,problem],weighted)
 
-    df = df[(df['YEAR'] == 2021) | (df['YEAR'] == 2022)]
-
-    if problem == 'ECON1MOD':
-        conditions = [
-            (df['ECON1MOD'] == 'Excellent') | (df['ECON1MOD'] == 'Good'),
-            (df['ECON1MOD'] == 'Poor') | (df['ECON1MOD'] == 'Only fair')
-        ]
-    elif problem == 'ECON1BMOD':
-        conditions = [
-            (df['ECON1BMOD'] == 'Better'),
-            (df['ECON1BMOD'] == 'Worse')
-        ]
-    else:
-        conditions = [
-            (df['ECON1CMOD'] == 'Positive'),
-            (df['ECON1CMOD'] == 'Negative')
-        ]
-    sentiment = ['Positive', 'Negative']
-
-    # create a new column that labels each rating as negative or positive
-    df['SENTIMENT'] = np.select(conditions, sentiment, default='Refused')
+    df = df[(df['Year'] == 2021) | (df['Year'] == 2022)]
 
     # get the count for each unique year + group + sentiment
-    df = df.groupby(['YEAR',group,'SENTIMENT'],as_index=False)['count'].sum()
+    df = df.groupby(['Year',group,problem],as_index=False)['count'].sum()
 
     # convert to wide format so negative rating counts and positive rating counts are a separate columns
-    df = pd.pivot_table(df,index=['YEAR',group],columns=['SENTIMENT'],values='count').reset_index()
+    df = pd.pivot_table(df,index=['Year',group],columns=[problem],values='count').reset_index()
 
     # add a column for the percent of negative ratings 
     df['PercentNegative'] = round((df['Negative'] / (df['Negative']+df['Positive']))*100,1)
 
     # convert to wide so each year gets its own column with percent negative as the values
-    df = pd.pivot_table(df,index=group,columns='YEAR',values=['Negative','PercentNegative']).reset_index()
+    df = pd.pivot_table(df,index=group,columns='Year',values=['Negative','PercentNegative']).reset_index()
 
     # column names are tuples since values is a list so convert to string
     new_col_names = []
@@ -82,20 +63,19 @@ def get_percent_increase(df,group,problem,weighted):
     df.columns = new_col_names
 
     df = df.rename(columns={
-        'Negative2021':'2021_Count',
-        'Negative2022':'2022_Count',
-        'PercentNegative2021':'2021_Percent',
-        'PercentNegative2022':'2022_Percent'
+        'Negative2021':'n_2021',
+        'Negative2022':'n_2022',
+        'PercentNegative2021':'percent_2021',
+        'PercentNegative2022':'percent_2022'
     })
 
-    df['2021_Count'] = df['2021_Count'].astype(int)
-    df['2022_Count'] = df['2022_Count'].astype(int)
-    df['2021_Percent'] = round(df['2021_Percent'],0).astype(int)
-    df['2022_Percent'] = round(df['2022_Percent'],0).astype(int)
-    
+    df['n_2021'] = df['n_2021'].astype(int)
+    df['n_2022'] = df['n_2022'].astype(int)
+    df['percent_2021'] = round(df['percent_2021'],0).astype(int)
+    df['percent_2022'] = round(df['percent_2022'],0).astype(int)
     
     # # calculate the difference between the percent of negative ratings for the current and previous year
-    df['PercentDiff'] = round(df['2022_Percent'] - df['2021_Percent'],0).astype(int)
+    df['percent_diff'] = round(df['percent_2022'] - df['percent_2021'],0).astype(int)
 
     write_to_file(df)
     return df
