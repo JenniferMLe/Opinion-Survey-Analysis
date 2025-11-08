@@ -1,5 +1,71 @@
 import pandas as pd
-import numpy as np
+
+# read cleaned dataset from csv file
+df_combined = pd.read_csv('Datasets/combined_dataset.csv')
+
+
+# map filter choices to column names
+demographics = ['Age','Race','Gender','Income','Education','Region','Party',
+                'Marital Status','Religion','Faith Importance','Pray Frequency']
+
+social_media = ['Facebook', 'Youtube', 'Twitter', 'Instagram', 'Snapchat',
+            'Whatsapp', 'Linkedin', 'Pinterest', 'Tiktok', 'Bereal', 'Reddit']
+
+# maps selection label to column names
+col = {
+    'Age':'Age_Cat',
+    'Race':'Race',
+    'Gender':'Gender',
+    'Income':'Income_Cat',
+    'Region':'Region',
+    'Education':'Education',
+    'Social Media':'Social_Media',
+    'Party':'Party',
+    'Religion':'Religion',
+    'Faith Importance':'Faith_Importance',
+    'Pray Frequency':'Pray_Freq',
+    'Marital Status':'Marital',
+    'Economy Rating':'Econ_Rating',
+    'Economy Rating Category':'Econ_Rating_Cat',
+    'Economy Outlook':'Econ_Outlook',
+    'Economy Outlook Category': 'Econ_Outlook_Cat',
+    'Economy Rating and Outlook':'Econ_Rating_Outlook'
+}
+
+# define order for categorical columns
+category_orders = {
+    'Age_Cat':['18-24','25-39','40-59','60-79','80+'],
+    'Income_Cat':['< $40K','$40-70K','$70-100K','$100K+'],
+    'Econ_Rating':['Poor','Only Fair','Good','Excellent'],
+    'Econ_Outlook':['Worse','About the same','Better'],
+    'Party':['Democrat','Republican','Independent','Other'],
+    'Faith_Importance':['Not at all important','Not too important','Somewhat important','Very important'],
+    'Marital':['Never married','Living with a partner','Married','Divorced','Widowed'],
+    'Education':[
+        "No schooling completed",
+        "Some High School",
+        "High School",
+        "Some College",
+        "Associate's Degree",
+        "Bachelor's Degree",
+        "Master's Degree or Higher"
+    ],
+    'Pray_Freq':[
+        'Never',
+        'Seldom',
+        'A few times a month',
+        'Once a week',
+        'A few times a week',
+        'Once a day',
+        'Several times a day'
+    ]
+}
+
+# define graph colors
+colors = [
+    "#264653", "#2A9D8F", "#E9C46A",
+    "#F4A261", "#E76F51", "#D3D3D3", "#1D3557"
+]
 
 def write_to_file(df,file_name='Datasets/result.csv'):
     df.to_csv(file_name, index=False)
@@ -28,13 +94,9 @@ def get_count(df,cols,weighted):
 
 def get_percent_increase(df,group,problem,weighted):
     if group == 'social_media':
-        sm = ['Facebook', 'Youtube', 'Twitter', 'Instagram', 'Snapchat',
-            'Whatsapp', 'Linkedin', 'Pinterest', 'Tiktok', 'Bereal', 'Reddit']
-        
         cols = ['Respid','Year',problem,'Weight']
-
-        df = df[cols+sm]
-        df = pd.melt(df, id_vars=cols,value_vars=sm, var_name='social_media')
+        df = df[cols+social_media]
+        df = pd.melt(df, id_vars=cols,value_vars=social_media, var_name='Social_Media')
         df = df[df['value']=='Use']
     
     df = get_count(df,['Year',group,problem],weighted)
