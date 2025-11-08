@@ -12,7 +12,7 @@ st.markdown(
             padding-left: 1rem;
             padding-right: 1rem;
         }
-        .border {
+        .border { 
             border-style: solid;
             border-color: #CCCCCC;
             background-color: #EDEDED;

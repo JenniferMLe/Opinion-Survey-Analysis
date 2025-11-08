@@ -2,6 +2,7 @@ import streamlit as st
 import plotly.express as px
 import utils 
 
+# create local constants from utils so we don't have to keep doing util.
 df_combined = utils.df_combined
 demographics, social_media = utils.demographics, utils.social_media
 col, category_orders, colors = utils.col, utils.category_orders, utils.colors
@@ -9,6 +10,7 @@ col, category_orders, colors = utils.col, utils.category_orders, utils.colors
 def show():
     st.subheader("Problem: Pessimism in 2022")
 
+    # maps econ_rating and econ_outlook values to a color
     color_map = {
         'Excellent':"#0daa00",
         'Good':'#8fdc32',
@@ -24,20 +26,23 @@ def show():
     graphs = st.container()
 
     with graphs:
-        # this function displays a cluster bar graph dispalying yearly changes in a column in the combined dataframe
-        def graph_changes(column,weighted,title):
-            df = utils.get_count(df_combined,['Year',column],weighted)
+        # displays line graph showing changes in opinions about the economy
+        # metric is economy rating, economy outlook, etc.
+        def graph_changes(metric,weighted,title):
+            # get count of each year and metric values combination e.g 2020 and 'Only Fair'
+            df = utils.get_count(df_combined,['Year',metric],weighted)
+            # get the share of each metric value by year
             df['share'] = round((df['count'] / df.groupby('Year')['count'].transform('sum')) * 100,0).astype(int)
-            df = df[df[column] != 'Refused']
+            df = df[df[metric] != 'Refused']
 
             fig = px.line(
                 df,
                 x='Year',
                 y='share',
-                color=column,
+                color=metric,
                 title=title,
                 hover_data={
-                    column:False,
+                    metric:False,
                     'count':True,
                     'share':True
                 },
@@ -55,10 +60,10 @@ def show():
             
             return fig
         
-        weighted = st.radio('',['Use weighted data', 'Use raw data'],horizontal=True,key=11)
+        weighted = st.radio('',['Use weighted data', 'Use raw data'],horizontal=True,key=2)
         if weighted == 'Use weighted data': weighted = True
         else: weighted = False
-
+        
         problem1,problem2,problem3 = st.columns([1,1,1])
         with problem1: st.plotly_chart(graph_changes('Econ_Rating',weighted,'Share of Economy Ratings by Year'))
         with problem2: st.plotly_chart(graph_changes('Econ_Outlook',weighted,'Share of Economy Outlooks by Year'))
