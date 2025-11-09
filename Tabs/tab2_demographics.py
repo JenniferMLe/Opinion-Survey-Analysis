@@ -51,7 +51,7 @@ def show():
         fig.update_xaxes(title=dg1).update_layout(showlegend=False)
         st.plotly_chart(fig)
     
-    # creates and displays a graph of shares of demographic 1 categories amoung demographic 2 categories
+    # creates and displays a graph of shares of demographic 1 categories among demographic 2 categories
     with multi_cat_graph:
         if dg1 != dg2: 
             # get the count of each demographic1 and demographic2 value combo e.g <$40K and 'High School'

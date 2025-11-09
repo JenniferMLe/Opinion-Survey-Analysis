@@ -88,7 +88,7 @@ def show():
     # create graph showing shares of demographic categories for each rating or outlook
     # e.g out of all poor econ ratings, what percent does <$40K contribute?
     with facet_graph:
-        st.subheader("Distribution of Economy Ratings and Outlooks Amoung Demographic Categories")
+        st.subheader("Distribution of Economy Ratings and Outlooks Among Demographic Categories")
         
         filter1,filter2,filter3 = st.columns([1,1,1])
         
