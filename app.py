@@ -26,9 +26,9 @@ st.markdown(
 # defining tabs
 intro_tab,demographics_tab,problem_tab,causal_tab,prediction_tab = st.tabs([
     'Intro',
-    "Survey Participants",
-    'Changes Over Time',
-    'Casual Insights',
+    'Who We\'re Studying',
+    'Problem',
+    'Cause',
     'Sentiment Prediction'
 ])
 

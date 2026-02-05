@@ -8,7 +8,7 @@ demographics, social_media = utils.demographics, utils.social_media
 col, category_orders, colors = utils.col, utils.category_orders, utils.colors
 
 def show():
-    st.subheader("Problem: Pessimism in 2022")
+    st.subheader("Pessimism in 2022")
 
     # maps econ_rating and econ_outlook values to a color
     color_map = {
