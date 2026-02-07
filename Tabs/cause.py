@@ -10,11 +10,17 @@ col, category_orders, colors = utils.col, utils.category_orders, utils.colors
 def show():
     st.header("What cause an increase in negative economy ratings in 2022?")    
     st.markdown('<div class="border">'  
-    "Many events happened in 2021 and 2022 that could have affected sentiment in 2022 "
-    "such as Joe Biden taking office in January of 2021 and rising inflation rates in 2022.<br>"
-    "View inflation rate trends from 2000-current "
-    '<a href="https://www.usinflationcalculator.com/inflation/current-inflation-rates/" target="_blank">here</a><br><br>'
+    "Events happening in 2021 and 2022 could have affected sentiment "
+    "such as Joe Biden taking office and rising inflation rates. "
+
+    "Inflation rates represent the increase in prices compared to the previous year. " 
+    "At its peak, the 12-month inflation rate was 9.1% in June of 2022 meaning prices on average " 
+    "were 9.1% more expensive compared to June of 2021. View inflation rate trends from 2000-current "
+    '<a href="https://www.usinflationcalculator.com/inflation/current-inflation-rates/" target="_blank">here. </a><br><br>'
+
     "Let's see if the increase in negative sentiment was caused by inflation rates by holding " 
     " features than may affect it constant such as political affliation and age."
     '</div>', unsafe_allow_html=True)
+
+    
 

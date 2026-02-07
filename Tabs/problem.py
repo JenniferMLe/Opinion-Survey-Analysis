@@ -20,7 +20,8 @@ def show():
         'About the same':'#ffc500',
         'Worse':'#f6492a',
         'Negative':'#f6492a',
-        'Positive':"#0daa00"
+        'Positive':"#0daa00",
+        'Neutral':'#ffc500'
     }
     
     graphs = st.container()
@@ -97,7 +98,7 @@ def show():
         filter1,filter2,filter3 = st.columns([1,1,1])
         
         with filter1: metric = st.selectbox("Metric", 
-            ['Economy Rating','Economy Outlook','Economy Rating and Outlook','Economy Rating Category','Economy Outlook Category'])
+            ['Economy Rating','Economy Outlook','Economy Rating and Outlook'])
         with filter2: dg = st.selectbox("Demographic",demographics,index=3)
         with filter3: weighted = st.selectbox("Use Weighted Data",[True,False])
        
@@ -185,34 +186,34 @@ def show():
         graph1,graph2,graph3 = st.columns([1,1,1.25])
             
         with graph1:
-            fig = graph_percent_increase(dg,'Economy Rating Category',weighted,
-                'Metric 1: Economy Rating<br><sub>Increase in "poor" or "only fair" ratings</sub>')
+            fig = graph_percent_increase(dg,'Economy Rating',weighted,
+                'Metric 1: Economy Rating<br><sub>Increase in "poor" ratings</sub>')
             fig.update_layout(showlegend=False)
             st.plotly_chart(fig)
 
         with graph2:
-            fig = graph_percent_increase(dg,'Economy Outlook Category',weighted,
+            fig = graph_percent_increase(dg,'Economy Outlook',weighted,
                 'Metric 2: Economy Outlook<br><sub>Increase in "worse" outlooks</sub>')
             fig.update_layout(showlegend=False)
             st.plotly_chart(fig)
         
         with graph3:
             fig = graph_percent_increase(dg,'Economy Rating and Outlook',weighted,
-                'Metric 3: Economy Rating and Outlook<br><sub>Increase in "worse" or "about the same" outlook with "poor" or "only fair" ratings')
+                'Metric 3: Economy Rating and Outlook<br><sub>Increase in "worse" or "about the same" outlook with "poor" ratings')
             st.plotly_chart(fig)
 
         st.markdown('<div class="border">'  
-            "- The <b>highest income group (>$70K)</b> have the greatest increase " \
+            "- The <b>highest income group (>$100K)</b> have the greatest increase " \
             "in negative sentiment by metric 3.<br>"
 
             "- Individuals with a <b>Bachelor's Degree or higher</b> have the greatest increase in " \
-            "negative sentiment by metric 2 and 3.<br>"
+            "negative sentiment by metric 2.<br>"
 
-            "- <b>Religious individuals (faith importance = very important)</b> have the greatest increase " \
-            "in negative economy ratings but the lowest increase in negative economy outlook.<br>" 
+            "- <b>Non-religious individuals (faith importance = not too important)</b> have the lowest increase " \
+            "in negative economy ratings but the greatest increase in negative economy outlook.<br>" 
             
-            "- <b>LinkedIn users</b> have the highest increase in negative sentiment by all 3 metrics.<br>"
+            "- <b>LinkedIn users</b> have the highest increase in negative sentiment by metrics 2 and 3.<br>"
 
             "- <b>Republicans</b> have the highest increase in negative economy ratings " \
-            "but the second lowest increase in economy outlook."
+            "but the lowest increase in economy outlook."
         '</div>', unsafe_allow_html=True)

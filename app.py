@@ -1,5 +1,5 @@
 import streamlit as st
-from Tabs import intro, demographics, problem, causal_insights, sentiment_prediction
+from Tabs import intro, demographics, problem, cause, sentiment_prediction
 
 st.set_page_config(layout="wide")
 
@@ -42,7 +42,7 @@ with problem_tab:
     problem.show()
 
 with causal_tab:
-    causal_insights.show()
+    cause.show()
 
 with prediction_tab:
     sentiment_prediction.show()

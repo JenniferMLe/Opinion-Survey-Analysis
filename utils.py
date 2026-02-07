@@ -4,7 +4,7 @@ import pandas as pd
 df_combined = pd.read_csv('Datasets/combined_dataset.csv')
 
 demographics = ['Age','Race','Gender','Income','Education','Region','Party',
-                'Marital Status','Religion','Faith Importance','Pray Frequency']
+                'Marital Status','Religion','Faith Importance']
 
 social_media = ['Facebook', 'Youtube', 'Twitter', 'Instagram', 'Snapchat',
             'Whatsapp', 'Linkedin', 'Pinterest', 'Tiktok', 'Bereal', 'Reddit']
@@ -21,12 +21,9 @@ col = {
     'Party':'Party',
     'Religion':'Religion',
     'Faith Importance':'Faith_Importance',
-    'Pray Frequency':'Pray_Freq',
     'Marital Status':'Marital',
     'Economy Rating':'Econ_Rating',
-    'Economy Rating Category':'Econ_Rating_Cat',
     'Economy Outlook':'Econ_Outlook',
-    'Economy Outlook Category': 'Econ_Outlook_Cat',
     'Economy Rating and Outlook':'Econ_Rating_Outlook'
 }
 
@@ -47,15 +44,6 @@ category_orders = {
         "Associate's Degree",
         "Bachelor's Degree",
         "Master's Degree or Higher"
-    ],
-    'Pray_Freq':[
-        'Never',
-        'Seldom',
-        'A few times a month',
-        'Once a week',
-        'A few times a week',
-        'Once a day',
-        'Several times a day'
     ]
 }
 
@@ -66,7 +54,7 @@ colors = [
 ]
 
 # writes a dataframe to a csv filt for debugging
-def write_to_file(df,file_name='Datasets/result.csv'):
+def write_to_file(df,file_name='result.csv'):
     df.to_csv(file_name, index=False)
 
 # print a list of distinct values from a column in a dataframe
@@ -91,12 +79,12 @@ def get_count(df,cols,weighted):
     return df
 
 def get_percent_increase(df,dg,metric,weighted):
-    if dg == 'social_media':
-        cols = ['Respid','Year',metric,'Weight']
+    if dg == 'Social_Media':
+        cols = ['Year',metric,'Weight']
         df = df[cols+social_media]
         df = pd.melt(df, id_vars=cols,value_vars=social_media, var_name='Social_Media')
         df = df[df['value']=='Use']
-    
+
     df = get_count(df,['Year',dg,metric],weighted)
 
     df = df[(df['Year'] == 2021) | (df['Year'] == 2022)]
@@ -107,11 +95,24 @@ def get_percent_increase(df,dg,metric,weighted):
     # convert to wide format so negative rating counts and positive rating counts are separate columns
     df = pd.pivot_table(df,index=['Year',dg],columns=[metric],values='count').reset_index()
 
-    # add a column for the percent of negative ratings 
-    df['PercentNegative'] = round((df['Negative'] / (df['Negative']+df['Positive']))*100,1)
+    df = df[df[dg] != 'Refused']
+    df = df.fillna(0)
 
+    negative = ''
+    if metric == 'Econ_Rating':
+        # add a column for the percent of negative ratings 
+        df['PercentNegative'] = round((df['Poor'] / (df['Poor']+df['Only Fair']+df['Good']+df['Excellent']+df['Refused']))*100,1)
+        negative = 'Poor'
+    elif metric == 'Econ_Outlook':
+        # add a column for the percent of negative ratings 
+        df['PercentNegative'] = round((df['Worse'] / (df['Worse']+df['About the same']+df['Better']+df['Refused']))*100,1)
+        negative = 'Worse'
+    elif metric == 'Econ_Rating_Outlook':
+        df['PercentNegative'] = round((df['Negative'] / (df['Negative']+df['Neutral']+df['Positive']+df['Refused']))*100,1)
+        negative = 'Negative'
+    
     # convert to wide so each year gets its own column with percent negative as the values
-    df = pd.pivot_table(df,index=dg,columns='Year',values=['Negative','PercentNegative']).reset_index()
+    df = pd.pivot_table(df,index=dg,columns='Year',values=[negative,'PercentNegative']).reset_index()
 
     # column names are tuples since values is a list so convert to string
     new_col_names = []
@@ -123,8 +124,8 @@ def get_percent_increase(df,dg,metric,weighted):
     df.columns = new_col_names
 
     df = df.rename(columns={
-        'Negative2021':'n_2021',
-        'Negative2022':'n_2022',
+        negative+'2021':'n_2021',
+        negative+'2022':'n_2022',
         'PercentNegative2021':'percent_2021',
         'PercentNegative2022':'percent_2022'
     })

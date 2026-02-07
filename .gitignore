@@ -4,4 +4,4 @@
 *.pyc
 **/__pycache__/
 test.py
-Datasets/result.csv
+result.csv
