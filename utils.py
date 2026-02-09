@@ -59,9 +59,9 @@ def write_to_file(df,file_name='result.csv'):
 
 # print a list of distinct values from a column in a dataframe
 # helps with data cleaning
-def get_distinct_values(df, columns):
-    vals = df[columns].unique()
-    vals = pd.DataFrame(vals)
+def get_distinct_values(df, column):
+    vals = df[column].unique()
+    # vals = pd.DataFrame(vals)
     return vals
 
 # gets count of df grouped by each column in cols
