@@ -7,7 +7,7 @@ demographics = ['Age','Race','Gender','Income','Education','Region','Party',
                 'Marital Status','Religion','Faith Importance']
 
 social_media = ['Facebook', 'Youtube', 'Twitter', 'Instagram', 'Snapchat',
-            'Whatsapp', 'Linkedin', 'Pinterest', 'Tiktok', 'Bereal', 'Reddit']
+            'Whatsapp', 'Linkedin', 'Pinterest', 'Tiktok', 'Bereal', 'Reddit','Bluesky','Threads','Truthsocial']
 
 # maps selection label to column names
 col = {
@@ -80,10 +80,10 @@ def get_count(df,cols,weighted):
 
 def get_percent_increase(df,dg,metric,weighted):
     if dg == 'Social_Media':
-        cols = ['Year',metric,'Weight']
+        cols = ['Respid','Year',metric,'Weight']
         df = df[cols+social_media]
         df = pd.melt(df, id_vars=cols,value_vars=social_media, var_name='Social_Media')
-        df = df[df['value']=='Use']
+        df = df[df['value']=='Yes']
 
     df = get_count(df,['Year',dg,metric],weighted)
 

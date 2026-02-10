@@ -17,10 +17,10 @@ def show():
     with filter2: dg2 = st.selectbox("Demographic 2",demographics,index=4)
     with filter3: weighted = st.selectbox("Using Weighted Data",[True,False],index=1)
     
-    basic_graph, multi_cat_graph = st.columns([1,3])
+    single_cat_graph, multi_cat_graph = st.columns([1,3])
 
     # creates and displays a graph of shares of demographic 1 categories
-    with basic_graph:
+    with single_cat_graph:
         # get the count of each demographic1 value
         df = utils.get_count(df_combined,[col[dg1]],weighted)
         # get the share of each demographic1 category by dividing each category count with total count
@@ -59,7 +59,7 @@ def show():
             # get the share of of each count by each demographic2
             df['share'] = (df['count'] / df.groupby(col[dg2])['count'].transform('sum')).round(2) * 100
             df = df[df[col[dg1]] != 'Refused']
-            df = df[df[col[dg2]] != 'Refused']
+            df = df[~df[col[dg2]].isin(['Other','Refused'])]
 
             # convert grouped bar to stacked bar graph is theres too many rows
             if len(df) <= 30:barmode = 'group'
@@ -116,7 +116,7 @@ def show():
             social_media_df = pd.concat([df,social_media_df])
 
         # Only include rows where usage is 'Use'
-        social_media_df = social_media_df[social_media_df['Usage'] == 'Use']
+        social_media_df = social_media_df[social_media_df['Usage'] == 'Yes']
         
         fig = px.bar(
             social_media_df, 
