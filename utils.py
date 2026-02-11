@@ -24,7 +24,7 @@ col = {
     'Marital Status':'Marital',
     'Economy Rating':'Econ_Rating',
     'Economy Outlook':'Econ_Outlook',
-    'Economy Rating and Outlook':'Econ_Rating_Outlook'
+    'Economy Sentiment':'Econ_Sentiment'
 }
 
 # define order for categorical columns
@@ -107,7 +107,7 @@ def get_percent_increase(df,dg,metric,weighted):
         # add a column for the percent of negative ratings 
         df['PercentNegative'] = round((df['Worse'] / (df['Worse']+df['About the same']+df['Better']+df['Refused']))*100,1)
         negative = 'Worse'
-    elif metric == 'Econ_Rating_Outlook':
+    elif metric == 'Econ_Sentiment':
         df['PercentNegative'] = round((df['Negative'] / (df['Negative']+df['Neutral']+df['Positive']+df['Refused']))*100,1)
         negative = 'Negative'
     

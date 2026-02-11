@@ -20,7 +20,7 @@ def show():
         with filter2: weighted = st.radio('',['Use weighted data', 'Use raw data'],horizontal=True)
         df = df_combined[df_combined['Year'] == year]
         
-        metrics = ['Econ_Rating','Econ_Outlook','Econ_Rating_Outlook']
+        metrics = ['Econ_Rating','Econ_Outlook','Econ_Sentiment']
         # contains all correlation strenghts for each feature and metric
         all_cors = []
         for metric in metrics:

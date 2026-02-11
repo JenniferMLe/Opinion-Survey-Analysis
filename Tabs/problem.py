@@ -68,7 +68,7 @@ def show():
         problem1,problem2,problem3 = st.columns([1,1,1])
         with problem1: st.plotly_chart(graph_changes('Econ_Rating',weighted,'Share of Economy Ratings by Year'))
         with problem2: st.plotly_chart(graph_changes('Econ_Outlook',weighted,'Share of Economy Outlooks by Year'))
-        with problem3: st.plotly_chart(graph_changes('Econ_Rating_Outlook',weighted,'Share of Negative Sentiment by Year'))
+        with problem3: st.plotly_chart(graph_changes('Econ_Sentiment',weighted,'Share of Negative Sentiment by Year'))
 
     description = st.container()
 
@@ -98,7 +98,7 @@ def show():
         filter1,filter2,filter3 = st.columns([1,1,1])
         
         with filter1: metric = st.selectbox("Metric", 
-            ['Economy Rating','Economy Outlook','Economy Rating and Outlook'])
+            ['Economy Rating','Economy Outlook','Economy Sentiment'])
         with filter2: dg = st.selectbox("Demographic",demographics,index=3)
         with filter3: weighted = st.selectbox("Use Weighted Data",[True,False])
        
@@ -198,8 +198,8 @@ def show():
             st.plotly_chart(fig)
         
         with graph3:
-            fig = graph_percent_increase(dg,'Economy Rating and Outlook',weighted,
-                'Metric 3: Economy Rating and Outlook<br><sub>Increase in "worse" or "about the same" outlook with "poor" ratings')
+            fig = graph_percent_increase(dg,'Economy Sentiment',weighted,
+                'Metric 3: Economy Sentiment<br><sub>Increase in "worse" outlooks or "about the same" outlook with "poor" ratings')
             st.plotly_chart(fig)
 
         st.markdown('<div class="border">'  
