@@ -9,8 +9,7 @@ def show():
 
     "&nbsp;&nbsp;&nbsp;&nbsp;1. Examine how opinions on the economy have changed from 2020 to 2025<br>"
     "&nbsp;&nbsp;&nbsp;&nbsp;2. Visualize groups most affected when opinions about the economy become more pessimistic<br>"
-    "&nbsp;&nbsp;&nbsp;&nbsp;3. Examine what caused changes in sentiment<br>"
-    "&nbsp;&nbsp;&nbsp;&nbsp;4. Predict sentiment based on demographics<br><br>"
+    "&nbsp;&nbsp;&nbsp;&nbsp;3. Discover if economic events caused changes in sentiment<br><br>"
 
     "Below is the cleaned dataset used to conduct this study."
     '</div>', unsafe_allow_html=True)

@@ -1,5 +1,5 @@
 import streamlit as st
-from Tabs import intro, demographics, problem, cause, sentiment_prediction
+from Tabs import intro, demographics, problem, cause, end
 
 st.set_page_config(layout="wide")
 
@@ -29,7 +29,7 @@ intro_tab,demographics_tab,problem_tab,causal_tab,prediction_tab = st.tabs([
     'Who We\'re Studying',
     'Problem',
     'Cause',
-    'Sentiment Prediction'
+    'Correlations'
 ])
 
 with intro_tab:
@@ -45,4 +45,4 @@ with causal_tab:
     cause.show()
 
 with prediction_tab:
-    sentiment_prediction.show()
+    end.show()

@@ -22,5 +22,5 @@ def show():
     " features than may affect it constant such as political affliation and age."
     '</div>', unsafe_allow_html=True)
 
-    
+    st.text("... WORK IN PROGRESS ... ")
     
