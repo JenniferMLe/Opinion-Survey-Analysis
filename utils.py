@@ -24,7 +24,7 @@ col = {
     'Marital Status':'Marital',
     'Economy Rating':'Econ_Rating',
     'Economy Outlook':'Econ_Outlook',
-    'Economy Sentiment':'Econ_Sentiment'
+    'Overall Sentiment':'Econ_Sentiment'
 }
 
 # define order for categorical columns

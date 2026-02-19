@@ -1,5 +1,5 @@
 import streamlit as st
-from Tabs import intro, demographics, problem, cause, end
+from Tabs import intro, demographics, problem, cause, details
 
 st.set_page_config(layout="wide")
 
@@ -24,12 +24,12 @@ st.markdown(
 )
 
 # defining tabs
-intro_tab,demographics_tab,problem_tab,causal_tab,prediction_tab = st.tabs([
+intro_tab,demographics_tab,problem_tab,details_tab,causal_tab = st.tabs([
     'Intro',
     'Who We\'re Studying',
     'Problem',
-    'Cause',
-    'Correlations'
+    'Deep Dive',
+    'Cause'
 ])
 
 with intro_tab:
@@ -44,5 +44,5 @@ with problem_tab:
 with causal_tab:
     cause.show()
 
-with prediction_tab:
-    end.show()
+with details_tab:
+    details.show()
