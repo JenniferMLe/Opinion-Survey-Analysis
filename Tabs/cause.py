@@ -34,11 +34,11 @@ def show():
         "sentiment would increase on average by 21 percentage points compared to if everyone was from 2021.\n\n"
 
         "**Covariates** are uncontrolled variables that may affect the outcome. "
-        "For example if more republicans, religious, or older participants happen to be selected for the 2022 study "
+        "For example if more republicans, religious people, or older adults happen to be selected for the 2022 study "
         "(when Joe Biden was president), we can't reliably say econmic events of 2022 "
         "caused the increase in negative sentiment because of selection bias.\n\n"
         
-        "Using double robust corrections, we can account for possible selection biases.",
+        "Using double robust corrections, we can account for possible selection biases. ",
         unsafe_allow_html=True
     )
    
