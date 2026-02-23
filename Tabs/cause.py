@@ -8,16 +8,19 @@ demographics, social_media = utils.demographics, utils.social_media
 col, category_orders, colors = utils.col, utils.category_orders, utils.colors
 
 def show():
-    st.header("Did events in 2022 increase negative sentiment?")    
-    st.markdown('<div class="border">'  
-    "<b>Events happening in 2021 and 2022 could have affected sentiment</b> "
-    "such as Joe Biden taking office and rising inflation rates. "
+    st.subheader("Did events in 2022 increase negative sentiment?")    
+    
+    st.markdown(
+        '<div class="border">'  
+            "<b>Events happening in 2021 and 2022 could have affected sentiment</b> "
+            "such as Joe Biden taking office and rising inflation rates. "
 
-    "<b>Inflation rates</b> represent the increase in prices compared to the previous year. " 
-    "At its peak, the 12-month inflation rate was 9.1% in June of 2022 meaning prices on average " 
-    "were 9.1% more expensive compared to June of 2021. View inflation rate trends from 2000-current "
-    '<a href="https://www.usinflationcalculator.com/inflation/current-inflation-rates/" target="_blank">here. </a>'
-    '</div>', unsafe_allow_html=True)
+            "<b>Inflation rates</b> represent the increase in prices compared to the previous year. " 
+            "At its peak, the 12-month inflation rate was 9.1% in June of 2022 meaning prices on average " 
+            "were 9.1% more expensive compared to June of 2021. View inflation rate trends from 2000-current "
+            '<a href="https://www.usinflationcalculator.com/inflation/current-inflation-rates/" target="_blank">here. </a>'
+        '</div>'
+    ,unsafe_allow_html=True)
 
     st.markdown(
         "Defining the **hypothesis**\n"

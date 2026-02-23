@@ -46,3 +46,6 @@ with causal_tab:
 
 with details_tab:
     details.show()
+
+
+
